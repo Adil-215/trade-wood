@@ -25,7 +25,7 @@ export default function TechSpecsSection() {
             MECHANICAL SCHEMATICS / EXPLODED 3D RENDER
           </span>
 
-          <div className="relative w-full max-w-lg aspect-square bg-[#F7F7F5] rounded-3xl border border-stone-300/40 p-6 flex items-center justify-center overflow-hidden shadow-inner">
+          <div className="relative w-full max-w-lg aspect-square bg-[#F7F7F5] rounded-3xl border border-stone-300/40 p-6 flex items-center justify-center overflow-visible shadow-inner">
             {/* Exploded diagram image */}
             <img
               src={explodedTechnicalView}
@@ -78,9 +78,9 @@ export default function TechSpecsSection() {
                         className={`absolute z-40 pointer-events-none cursor-default ${
                           node.id === "node-upper"
                             ? "bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center"
-                            : node.id === "node-plate"
-                            ? "left-6 top-1/2 -translate-y-1/2 flex items-center"
-                            : node.id === "node-midsole"
+                          : node.id === "node-plate"
+                            ? "left-7 top-1/2 -translate-y-1/2 flex items-center"
+                          : node.id === "node-midsole"
                             ? "right-6 top-1/2 -translate-y-1/2 flex flex-row-reverse items-center"
                             : "top-6 left-1/2 -translate-x-1/2 flex flex-col items-center"
                         }`}
@@ -90,35 +90,22 @@ export default function TechSpecsSection() {
                           <>
                             {/* Text above */}
                             <div className="text-center whitespace-nowrap select-none mb-1">
-                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                              <span className="block font-mono font-extrabold text-[9px] uppercase tracking-wider text-black">
                                 {node.name.split(". ")[1] || node.name}
                               </span>
                             </div>
                             {/* Line below text to dot */}
-                            <div className="w-px h-4 bg-[#6E8100]/70" />
+                            <div className="w-px h-4 bg-black" />
                           </>
                         )}
 
                         {node.id === "node-plate" && (
                           <>
                             {/* Line to right off dot */}
-                            <div className="h-px w-4 bg-[#6E8100]/70" />
+                            <div className="h-px w-6 bg-black" />
                             {/* Text on right */}
-                            <div className="text-left whitespace-nowrap select-none ml-1">
-                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
-                                {node.name.split(". ")[1] || node.name}
-                              </span>
-                            </div>
-                          </>
-                        )}
-
-                        {node.id === "node-midsole" && (
-                          <>
-                            {/* Line to left off dot */}
-                            <div className="h-px w-4 bg-[#6E8100]/70" />
-                            {/* Text on left */}
-                            <div className="text-right whitespace-nowrap select-none mr-1">
-                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                            <div className="text-left whitespace-nowrap select-none ml-1.5">
+                              <span className="block font-mono font-extrabold text-[9px] uppercase tracking-wider text-black">
                                 {node.name.split(". ")[1] || node.name}
                               </span>
                             </div>
@@ -128,15 +115,30 @@ export default function TechSpecsSection() {
                         {node.id === "node-outsole" && (
                           <>
                             {/* Line above text to dot */}
-                            <div className="w-px h-4 bg-[#6E8100]/70" />
+                            <div className="w-px h-4 bg-black" />
                             {/* Text below */}
                             <div className="text-center whitespace-nowrap select-none mt-1">
-                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                              <span className="block font-mono font-extrabold text-[9px] uppercase tracking-wider text-black">
                                 {node.name.split(". ")[1] || node.name}
                               </span>
                             </div>
                           </>
                         )}
+
+                        {node.id === "node-midsole" && (
+                          <>
+                            {/* Line to left off dot */}
+                            <div className="h-px w-4 bg-black" />
+                            {/* Text on left */}
+                            <div className="text-right whitespace-nowrap select-none mr-1">
+                              <span className="block font-mono font-extrabold text-[9px] uppercase tracking-wider text-black">
+                                {node.name.split(". ")[1] || node.name}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Duplicate block removed */}
                       </motion.div>
                     )}
                   </AnimatePresence>

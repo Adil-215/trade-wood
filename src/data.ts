@@ -93,15 +93,15 @@ export const technicalNodes: TechNode[] = [
   {
     id: "node-upper",
     name: "1. Responsive Dual-Weave Flyknit",
-    top: "18%",
+    top: "24%",
     left: "45%",
     description: "A single piece of breathable knit material that forms to your foot, eliminating friction points while offering targeted lateral support."
   },
   {
     id: "node-plate",
     name: "2. Carbon Fiber Propulsion Plate",
-    top: "42%",
-    left: "62%",
+    top: "37%",
+    left: "53%",
     description: "Sandwiched between foam layers, the custom carbon weave rigid plate provides instant energy return, launching you forward with every toe-off."
   },
   {
@@ -114,7 +114,7 @@ export const technicalNodes: TechNode[] = [
   {
     id: "node-outsole",
     name: "4. Geometric Traction Core",
-    top: "84%",
+    top: "75%",
     left: "48%",
     description: "Strategic compound rubber nodes designed specifically to capture moisture and grip pavement in any climate condition."
   }
