@@ -50,7 +50,7 @@ export default function TechSpecsSection() {
                   {/* Button trigger */}
                   <button
                     id={`tech-node-${node.id}`}
-                    onClick={() => setActiveNode(node)}
+                    onClick={() => setActiveNode(isActive ? null : node)}
                     className={`flex h-6.5 w-6.5 items-center justify-center rounded-full border shadow-md cursor-pointer transition-all ${
                       isActive
                         ? "bg-[#C8E600] border-black text-black scale-120"
@@ -60,10 +60,86 @@ export default function TechSpecsSection() {
                     <span className="h-1.5 w-1.5 rounded-full bg-current" />
                   </button>
 
-                  {/* Quick tooltip on node hover */}
-                  <span className="absolute top-8 left-1/2 -translate-x-1/2 rounded bg-black/90 px-2.5 py-1 text-[9px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
-                    {node.name.substring(3)}
-                  </span>
+                  {/* Desktop Quick hover tooltip when not active */}
+                  {!isActive && (
+                    <span className="absolute top-8 left-1/2 -translate-x-1/2 rounded bg-black/90 px-2.5 py-1 text-[9px] font-mono text-white opacity-0 md:group-hover:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
+                      {node.name.substring(3)}
+                    </span>
+                  )}
+
+                  {/* Responsive inline schematic leader line & label without heavy background */}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className={`absolute z-40 pointer-events-none cursor-default ${
+                          node.id === "node-upper"
+                            ? "bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center"
+                            : node.id === "node-plate"
+                            ? "left-6 top-1/2 -translate-y-1/2 flex items-center"
+                            : node.id === "node-midsole"
+                            ? "right-6 top-1/2 -translate-y-1/2 flex flex-row-reverse items-center"
+                            : "top-6 left-1/2 -translate-x-1/2 flex flex-col items-center"
+                        }`}
+                      >
+                        {/* Leader Connection Line & Labeled Text Block */}
+                        {node.id === "node-upper" && (
+                          <>
+                            {/* Text above */}
+                            <div className="text-center whitespace-nowrap select-none mb-1">
+                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                                {node.name.split(". ")[1] || node.name}
+                              </span>
+                            </div>
+                            {/* Line below text to dot */}
+                            <div className="w-px h-4 bg-[#6E8100]/70" />
+                          </>
+                        )}
+
+                        {node.id === "node-plate" && (
+                          <>
+                            {/* Line to right off dot */}
+                            <div className="h-px w-4 bg-[#6E8100]/70" />
+                            {/* Text on right */}
+                            <div className="text-left whitespace-nowrap select-none ml-1">
+                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                                {node.name.split(". ")[1] || node.name}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {node.id === "node-midsole" && (
+                          <>
+                            {/* Line to left off dot */}
+                            <div className="h-px w-4 bg-[#6E8100]/70" />
+                            {/* Text on left */}
+                            <div className="text-right whitespace-nowrap select-none mr-1">
+                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                                {node.name.split(". ")[1] || node.name}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {node.id === "node-outsole" && (
+                          <>
+                            {/* Line above text to dot */}
+                            <div className="w-px h-4 bg-[#6E8100]/70" />
+                            {/* Text below */}
+                            <div className="text-center whitespace-nowrap select-none mt-1">
+                              <span className="block font-mono font-bold text-[9px] uppercase tracking-wider text-stone-800">
+                                {node.name.split(". ")[1] || node.name}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
