@@ -10,6 +10,32 @@ import neonOrangeSneaker from "./assets/images/neon_orange_sneaker_1780681366059
 import tradewoodLaces from "./assets/images/tradewood_laces_solid_1780744709425.png";
 import tradewoodPolish from "./assets/images/tradewood_polish_solid_1780744730252.png";
 import tradewoodShiner from "./assets/images/tradewood_shiner_solid_1780744751870.png";
+import airluxeWhiteSneaker from "./assets/images/airluxe_white_1780768734752.png";
+
+export const airluxeShoe: Shoe = {
+  id: "tw-airluxe-platinum",
+  name: "StepX AirLuxe Platinum",
+  tagline: "The Future of Pure Air & Speed",
+  price: 245,
+  originalPrice: 280,
+  image: airluxeWhiteSneaker,
+  description: "Engineered for elite competitive road racing and premium athlete lifestyle. The StepX AirLuxe combines an ultra-luxuous white full-grain leather and lightweight ballistic mesh upper with a revolutionary multi-chamber pressure-reactive Air bag at the heel. Underneath, a curved multi-layer carbon fiber plate propels your heel-to-toe stride with unparalleled mechanical velocity. Accented by high-gloss liquid hot-chrome silver elements.",
+  colors: [
+    { name: "Platinum White/Chrome", hex: "#f5f5f5", bgClass: "bg-radial from-stone-100 to-stone-300" },
+    { name: "Liquid Silver", hex: "#cbd5e1", bgClass: "bg-slate-300" }
+  ],
+  sizes: [8, 8.5, 9, 9.5, 10, 10.5, 11, 12],
+  rating: 5.0,
+  reviewsCount: 168,
+  category: "Elite Cushioned Performance",
+  isNew: true,
+  specs: [
+    "Pressurized multi-chamber Air-Bag comfort heel unit",
+    "Hand-layered premium leather & dual-weave ballistic mesh",
+    "Active carbon-fiber energy propulsion plate integration",
+    "Double high-tension racing lacing guides"
+  ]
+};
 
 export const flagshipShoe: Shoe = {
   id: "tw-dynafit-volt",
@@ -39,6 +65,7 @@ export const flagshipShoe: Shoe = {
 };
 
 export const catalogList: Shoe[] = [
+  airluxeShoe,
   flagshipShoe,
   {
     id: "tw-carbon-black",

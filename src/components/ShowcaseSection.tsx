@@ -90,7 +90,7 @@ export default function ShowcaseSection({
                 key={shoe.id}
                 id={`showcase-tab-${shoe.id}`}
                 onClick={() => handleSelectShowcase(idx)}
-                className={`rounded-xl px-4 py-3 text-left transition-all border outline-hidden flex items-center gap-3 cursor-pointer ${
+                className={`rounded-xl px-4 py-3 text-left transition-all border outline-hidden flex items-center gap-3 cursor-pointer group/tab ${
                   activeShowcaseIdx === idx
                     ? "bg-white border-black shadow-md scale-102"
                     : "bg-white/40 border-stone-200 hover:border-black/50"
@@ -100,7 +100,7 @@ export default function ShowcaseSection({
                   <img
                     src={shoe.image}
                     alt={shoe.name}
-                    className="h-7 w-7 object-contain rotate-12 rounded-md"
+                    className="h-7 w-7 object-contain rounded-md transition-transform duration-300 group-hover/tab:scale-115"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -205,27 +205,27 @@ export default function ShowcaseSection({
           </div>
 
           {/* Center Block (col-span-4): Dynamic Immersive Spotlight Display */}
-          <div className="lg:col-span-4 relative flex flex-col justify-center items-center bg-[#EDF5D8] rounded-3xl overflow-hidden border border-[#C8E600]/30 p-8 text-center min-h-[400px]">
+          <div className="lg:col-span-4 relative flex flex-col justify-center items-center bg-[#EDF5D8] rounded-3xl overflow-hidden border border-[#C8E600]/30 p-8 text-center min-h-[400px] group/showcase-card">
             {/* Ambient decorative grid behind shoe */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `radial-gradient(#111827 1px, transparent 1px)`, backgroundSize: "16px 16px" }} />
             
             {/* Visual spotlight backdrop glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-56 w-56 rounded-full bg-[#C8E600]/30 blur-3xl" />
 
-            {/* Rotating floating showcase showcase item */}
+            {/* Floating spotlight showcase item */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${currentShoe.id}-${userSelectedColor.name}`}
-                initial={{ opacity: 0, scale: 0.8, rotate: -15, y: 15 }}
-                animate={{ opacity: 1, scale: 1.02, rotate: 15, y: -5 }}
-                exit={{ opacity: 0, scale: 0.8, rotate: -5, y: -15 }}
+                initial={{ opacity: 0, scale: 0.8, rotate: 0, y: 15 }}
+                animate={{ opacity: 1, scale: 1.02, rotate: 0, y: -5 }}
+                exit={{ opacity: 0, scale: 0.8, rotate: 0, y: -15 }}
                 transition={{ duration: 0.4, type: "spring", stiffness: 120 }}
                 className="relative z-10 flex items-center justify-center h-full w-full select-none"
               >
                 <img
                   src={currentShoe.image}
                   alt={currentShoe.name}
-                  className="w-9/12 sm:w-11/12 max-h-56 sm:max-h-none h-auto object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.18)] rounded-3xl mix-blend-multiply"
+                  className="w-9/12 sm:w-11/12 max-h-56 sm:max-h-none h-auto object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.18)] rounded-3xl mix-blend-multiply transition-transform duration-500 group-hover/showcase-card:scale-110"
                   style={{
                     filter: `hue-rotate(${
                       userSelectedColor.name === "Neon Orange" || userSelectedColor.name === "Kinetic Orange" ? "120deg" :

@@ -8,7 +8,7 @@ import { Twitter, Linkedin, Facebook, HelpCircle, FileText, ArrowUp } from "luci
 
 interface FooterProps {
   onScrollToTop: () => void;
-  onChangePage?: (page: "home" | "about") => void;
+  onChangePage?: (page: "home" | "about" | "faq" | "new-arrivals") => void;
 }
 
 export default function Footer({ onScrollToTop, onChangePage }: FooterProps) {
@@ -43,6 +43,28 @@ export default function Footer({ onScrollToTop, onChangePage }: FooterProps) {
             className="hover:text-white transition-colors uppercase cursor-pointer"
           >
             About Us
+          </button>
+
+          <button
+            id="footer-faq-btn"
+            onClick={() => {
+              if (onChangePage) onChangePage("faq");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="hover:text-white transition-colors uppercase cursor-pointer"
+          >
+            FAQ
+          </button>
+
+          <button
+            id="footer-new-arrivals-btn"
+            onClick={() => {
+              if (onChangePage) onChangePage("new-arrivals");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="hover:text-white transition-colors uppercase cursor-pointer"
+          >
+            New Arrivals
           </button>
 
           <button

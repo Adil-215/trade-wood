@@ -16,6 +16,8 @@ import Footer from "./components/Footer";
 import CartDrawer from "./components/CartDrawer";
 import ProductQuickViewModal from "./components/ProductQuickViewModal";
 import AboutUs from "./components/AboutUs";
+import FAQ from "./components/FAQ";
+import NewArrivals from "./components/NewArrivals";
 
 import { CartItem, ColorOption, Shoe } from "./types";
 import { catalogList } from "./data";
@@ -24,7 +26,7 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeQuickViewShoe, setActiveQuickViewShoe] = useState<Shoe | null>(null);
-  const [activePage, setActivePage] = useState<"home" | "about">("home");
+  const [activePage, setActivePage] = useState<"home" | "about" | "faq" | "new-arrivals">("home");
 
   // Cart Handlers
   const handleAddToCart = (shoe: Shoe, color: ColorOption, size: number) => {
@@ -117,6 +119,28 @@ export default function App() {
               setTimeout(() => {
                 handleScrollToSection("catalog-sec");
               }, 120);
+            }}
+          />
+        ) : activePage === "faq" ? (
+          <FAQ
+            onBackToHome={() => {
+              setActivePage("home");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onExploreCatalog={() => {
+              setActivePage("home");
+              setTimeout(() => {
+                handleScrollToSection("catalog-sec");
+              }, 120);
+            }}
+          />
+        ) : activePage === "new-arrivals" ? (
+          <NewArrivals
+            onAddToCart={handleAddToCart}
+            onOpenCart={() => setIsCartOpen(true)}
+            onBackToHome={() => {
+              setActivePage("home");
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
         ) : (

@@ -121,7 +121,7 @@ export default function AccessoriesSection({
                     <img
                       src={acc.image}
                       alt={acc.name}
-                      className="w-full h-full object-cover transition-all duration-500 scale-100 group-hover:scale-105 group-hover:-rotate-2"
+                      className="w-full h-full object-cover transition-all duration-500 scale-100 group-hover:scale-108"
                       style={{
                         filter: acc.id === "acc-laces-volt" && currentConfig.color.name === "Obsidian Black"
                           ? "grayscale(100%) brightness(40%)"

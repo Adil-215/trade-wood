@@ -155,7 +155,7 @@ export default function ProductCatalog({
                   <img
                     src={shoe.image}
                     alt={shoe.name}
-                    className="w-full h-full object-cover transition-all duration-500 scale-95 group-hover:scale-105 group-hover:rotate-6 drop-shadow-md"
+                    className="w-full h-full object-cover transition-all duration-500 scale-95 group-hover:scale-105 drop-shadow-md rounded-3xl"
                     style={{
                       filter: `hue-rotate(${
                         currentConfig.color.name === "Neon Orange" || currentConfig.color.name === "Kinetic Orange" ? "120deg" :

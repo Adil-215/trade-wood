@@ -14,8 +14,8 @@ interface NavbarProps {
   catalogItems: Shoe[];
   onScrollToSection: (elementId: string) => void;
   onSelectShoeProduct: (shoe: Shoe) => void;
-  activePage?: "home" | "about";
-  onChangePage?: (page: "home" | "about") => void;
+  activePage?: "home" | "about" | "faq" | "new-arrivals";
+  onChangePage?: (page: "home" | "about" | "faq" | "new-arrivals") => void;
 }
 
 export default function Navbar({
@@ -102,11 +102,11 @@ export default function Navbar({
             <button
               id="nav-link-new-arrivals"
               onClick={() => {
-                if (onChangePage) onChangePage("home");
-                onScrollToSection("catalog-sec");
+                if (onChangePage) onChangePage("new-arrivals");
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className={`font-display text-sm font-bold tracking-widest uppercase cursor-pointer transition-colors pt-1 ${
-                activePage === "home" ? "text-neutral-600 hover:text-neutral-900" : "text-neutral-400 hover:text-neutral-900"
+                activePage === "new-arrivals" ? "text-[#718200] border-b-2 border-[#718200] pb-0.5" : "text-neutral-600 hover:text-[#718200]"
               }`}
             >
               New Arrivals
@@ -137,6 +137,19 @@ export default function Navbar({
             }`}
           >
             About Us
+          </button>
+
+          <button
+            id="nav-link-faq"
+            onClick={() => {
+              if (onChangePage) onChangePage("faq");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`font-display text-sm font-bold tracking-widest uppercase cursor-pointer transition-colors transition-all ${
+              activePage === "faq" ? "text-[#718200] border-b-2 border-current pb-0.5" : "text-neutral-600 hover:text-neutral-900"
+            }`}
+          >
+            FAQ
           </button>
         </nav>
 
