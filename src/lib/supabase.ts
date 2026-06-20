@@ -34,8 +34,10 @@ export interface OrderInput {
   bankName: string;
   routingNumber: string;
   bankAccount: string;
+  isCod: boolean;
   subtotal: number;
   total: number;
+  quantity: number;
   items: Array<{
     shoeId: string;
     shoeName: string;
@@ -142,8 +144,10 @@ export async function createOrderLog(order: OrderInput): Promise<boolean> {
         bank_name: order.bankName,
         routing_number: order.routingNumber,
         bank_account: order.bankAccount,
+        is_cod: order.isCod,
         subtotal: order.subtotal,
         total: order.total,
+        quantity: order.quantity,
         items: JSON.stringify(order.items)
       });
 
