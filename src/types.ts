@@ -41,3 +41,11 @@ export interface TechNode {
   left: string; // CSS position left (e.g., '40%')
   description: string;
 }
+
+export interface UserSession {
+  email: string;
+  name: string;
+  streakDays: number;
+  points: number;
+}
+

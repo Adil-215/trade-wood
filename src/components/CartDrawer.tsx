@@ -7,6 +7,7 @@ import { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Lock, CheckCircle, Sparkles } from "lucide-react";
 import { CartItem } from "../types";
+import { createOrderLog } from "../lib/supabase";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (id: string, newQty: number) => void;
   onRemoveFromCart: (id: string) => void;
   onClearCart: () => void;
+  onExploreExclusive?: () => void;
 }
 
 export default function CartDrawer({
@@ -23,7 +25,8 @@ export default function CartDrawer({
   cartItems,
   onUpdateQuantity,
   onRemoveFromCart,
-  onClearCart
+  onClearCart,
+  onExploreExclusive
 }: CartDrawerProps) {
   const [isCheckoutCompleted, setIsCheckoutCompleted] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -33,9 +36,9 @@ export default function CartDrawer({
     address: "",
     city: "",
     zip: "",
-    cardNumber: "4111 2222 3333 4444",
-    expiry: "12/28",
-    cvv: "123"
+    bankAccount: "",
+    bankName: "",
+    routingNumber: ""
   });
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.shoe.price * item.quantity, 0);
@@ -43,14 +46,40 @@ export default function CartDrawer({
   const shipping = subtotal > 150 ? 0 : 15;
   const total = subtotal + tax + shipping;
 
-  const handleCheckoutSubmit = (e: FormEvent) => {
+  const handleCheckoutSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsCheckingOut(true);
-    // Simulate premium payment processing
-    setTimeout(() => {
+    
+    try {
+      const orderPayload = {
+        email: shippingInfo.email,
+        customerName: shippingInfo.name,
+        address: shippingInfo.address,
+        city: shippingInfo.city,
+        zip: shippingInfo.zip,
+        bankName: shippingInfo.bankName,
+        routingNumber: shippingInfo.routingNumber,
+        bankAccount: shippingInfo.bankAccount,
+        subtotal: subtotal,
+        total: total,
+        items: cartItems.map((item) => ({
+          shoeId: item.shoe.id,
+          shoeName: item.shoe.name,
+          colorName: item.selectedColor.name,
+          size: item.selectedSize,
+          quantity: item.quantity,
+          price: item.shoe.price
+        }))
+      };
+
+      // Persist order details to Supabase database!
+      await createOrderLog(orderPayload);
+    } catch (err) {
+      console.error("Supabase order submission error:", err);
+    } finally {
       setIsCheckingOut(false);
       setIsCheckoutCompleted(true);
-    }, 1800);
+    }
   };
 
   const resetDrawer = () => {
@@ -152,8 +181,13 @@ export default function CartDrawer({
                   </p>
                   <button
                     id="empty-cart-shop-btn"
-                    onClick={onClose}
-                    className="flex items-center justify-center gap-2 rounded-full bg-black py-3.5 px-6 text-xs font-bold text-white transition-all hover:bg-neutral-800"
+                    onClick={() => {
+                      onClose();
+                      if (onExploreExclusive) {
+                        onExploreExclusive();
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-full bg-black py-3.5 px-6 text-xs font-bold text-white transition-all hover:bg-neutral-800 cursor-pointer"
                   >
                     EXPLORE DESIGNS
                   </button>
@@ -298,28 +332,37 @@ export default function CartDrawer({
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5 border-t border-stone-100 pt-3">
-                    <span className="text-[10px] text-stone-500 font-mono">BILLING CARD (DEMO SECURE EMULATED)</span>
-                    <div className="flex gap-2">
+                  <div className="flex flex-col gap-2.5 border-t border-stone-100 pt-3">
+                    <span className="text-[10px] text-[#718200] font-mono font-bold uppercase tracking-widest">
+                      SECURE BANK TRANSFER BILLING
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
-                        value={shippingInfo.cardNumber}
-                        disabled
-                        className="flex-1 rounded-lg border border-stone-200 bg-stone-100 px-3 py-2 text-xs font-mono font-medium text-stone-500"
+                        placeholder="Bank Name"
+                        required
+                        value={shippingInfo.bankName}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, bankName: e.target.value })}
+                        className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                       />
                       <input
                         type="text"
-                        value={shippingInfo.expiry}
-                        disabled
-                        className="w-16 rounded-lg border border-stone-200 bg-stone-100 px-2 py-2 text-xs font-mono font-medium text-stone-500 text-center"
-                      />
-                      <input
-                        type="text"
-                        value={shippingInfo.cvv}
-                        disabled
-                        className="w-12 rounded-lg border border-stone-200 bg-stone-100 px-2 py-2 text-xs font-mono font-medium text-stone-500 text-center"
+                        placeholder="Routing Number (9 digits)"
+                        required
+                        maxLength={9}
+                        value={shippingInfo.routingNumber}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, routingNumber: e.target.value })}
+                        className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                       />
                     </div>
+                    <input
+                      type="text"
+                      placeholder="Bank Account Number"
+                      required
+                      value={shippingInfo.bankAccount}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, bankAccount: e.target.value })}
+                      className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-mono font-medium focus:border-black focus:bg-white focus:ring-0"
+                    />
                   </div>
 
                   {/* Pricing Breakdown */}

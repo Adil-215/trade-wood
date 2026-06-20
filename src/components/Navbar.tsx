@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Search, ShoppingBag, User, X, CheckSquare, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { CartItem, Shoe } from "../types";
+import { CartItem, Shoe, UserSession } from "../types";
 
 interface NavbarProps {
   cartItems: CartItem[];
@@ -16,6 +16,9 @@ interface NavbarProps {
   onSelectShoeProduct: (shoe: Shoe) => void;
   activePage?: "home" | "about" | "faq" | "new-arrivals";
   onChangePage?: (page: "home" | "about" | "faq" | "new-arrivals") => void;
+  userSession: UserSession | null;
+  onSignOut: () => void;
+  onOpenSignIn: () => void;
 }
 
 export default function Navbar({
@@ -25,11 +28,15 @@ export default function Navbar({
   onScrollToSection,
   onSelectShoeProduct,
   activePage = "home",
-  onChangePage
+  onChangePage,
+  userSession,
+  onSignOut,
+  onOpenSignIn
 }: NavbarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -180,15 +187,30 @@ export default function Navbar({
             )}
           </button>
 
-          {/* User Profile Icon */}
-          <button
-            id="profile-trigger-btn"
-            onClick={() => setIsProfileOpen(true)}
-            className="flex h-12 w-12 items-center justify-center rounded-full text-stone-900 transition-colors hover:bg-stone-200/50 cursor-pointer"
-            aria-label="Client Dashboard Profile"
-          >
-            <User className="h-6 w-6 stroke-1.5" />
-          </button>
+          {/* User Section */}
+          {userSession ? (
+            <div className="flex items-center gap-3">
+              <span className="hidden lg:inline text-xs font-mono font-semibold text-neutral-800 bg-stone-200/50 px-2.5 py-1 rounded-md">
+                Hi, {userSession.name.split(" ")[0]}!
+              </span>
+              <button
+                id="profile-trigger-btn"
+                onClick={() => setIsProfileOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#C8E600] font-mono font-bold text-sm tracking-tight border border-[#C8E600] hover:border-black transition-colors cursor-pointer shadow-sm active:scale-95"
+                aria-label="Client Dashboard Profile"
+              >
+                {userSession.name.charAt(0).toUpperCase()}
+              </button>
+            </div>
+          ) : (
+            <button
+              id="navbar-signin-btn"
+              onClick={onOpenSignIn}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-[#C8E600] text-xs font-extrabold tracking-widest uppercase hover:bg-stone-800 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 
@@ -317,7 +339,7 @@ export default function Navbar({
 
       {/* --- USER ACCOUNT DASHBOARD PROMPT --- */}
       <AnimatePresence>
-        {isProfileOpen && (
+        {isProfileOpen && userSession && (
           <motion.div
             id="profile-dialog-backdrop"
             initial={{ opacity: 0 }}
@@ -348,34 +370,34 @@ export default function Navbar({
 
               <div className="py-6 flex flex-col items-center text-center">
                 <div className="relative h-16 w-16 mb-4 rounded-full bg-black text-[#C8E600] flex items-center justify-center text-lg font-bold font-mono border-2 border-[#C8E600] shadow-sm">
-                  SX
-                  <div className="absolute right-0 bottom-0 h-3 w-3 rounded-full bg-[#C8E600] border-2 border-white" />
+                  {userSession.name.charAt(0).toUpperCase()}
+                  <div className="absolute right-0 bottom-0 h-3 w-3 rounded-full bg-[#C8E600] border-2 border-white animate-pulse" />
                 </div>
                 <h3 className="font-display text-base font-black text-neutral-900 leading-tight">
-                  Guest Athlete
+                  {userSession.name}
                 </h3>
-                <p className="font-mono text-[10px] text-neutral-500 mt-1 uppercase">
-                  TIER: ELITE TRAILBLAZER
+                <p className="font-mono text-[10px] text-neutral-500 mt-1 uppercase max-w-[240px] truncate">
+                  {userSession.email}
                 </p>
 
                 <div className="w-full mt-6 bg-white border border-stone-200/80 rounded-xl p-4 text-left space-y-3.5">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-neutral-500 font-medium">Daily Fitness Streak</span>
                     <span className="font-mono text-xs font-extrabold text-[#718200] bg-[#EDF5D8] px-2 py-0.5 rounded">
-                      14 Days 🔥
+                      {userSession.streakDays} Days 🔥
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-neutral-500 font-medium">Member Reward Tier</span>
                     <span className="font-mono text-xs font-extrabold text-neutral-900 bg-[#C8E600] px-2 py-0.5 rounded">
-                      Level 3 • 420pts
+                      Level {Math.floor(userSession.points / 150) + 1} • {userSession.points}pts
                     </span>
                   </div>
                   <div className="w-full bg-stone-100 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-black h-1.5 rounded-full" style={{ width: "58%" }} />
+                    <div className="bg-black h-1.5 rounded-full" style={{ width: `${Math.min(100, Math.max(0, ((userSession.points % 150) / 150) * 100))}%` }} />
                   </div>
                   <span className="block text-[9px] text-stone-500 font-mono text-center">
-                    58% towards next loyalty gift box
+                    {Math.max(0, 150 - (userSession.points % 150))} pts towards next loyalty gift box
                   </span>
                 </div>
               </div>
@@ -390,8 +412,11 @@ export default function Navbar({
                 </button>
                 <button
                   id="profile-logout-btn"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="w-full rounded-full bg-white border border-stone-200 py-3 text-xs font-bold text-stone-600 hover:text-black transition-all font-display tracking-widest uppercase"
+                  onClick={() => {
+                    onSignOut();
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full rounded-full bg-white border border-stone-200 py-3 text-xs font-bold text-stone-600 hover:text-black hover:bg-stone-50 transition-all font-display tracking-widest uppercase"
                 >
                   SIGN OUT
                 </button>

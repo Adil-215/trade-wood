@@ -18,8 +18,9 @@ import ProductQuickViewModal from "./components/ProductQuickViewModal";
 import AboutUs from "./components/AboutUs";
 import FAQ from "./components/FAQ";
 import NewArrivals from "./components/NewArrivals";
+import SignInModal from "./components/SignInModal";
 
-import { CartItem, ColorOption, Shoe } from "./types";
+import { CartItem, ColorOption, Shoe, UserSession } from "./types";
 import { catalogList } from "./data";
 
 export default function App() {
@@ -27,6 +28,36 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeQuickViewShoe, setActiveQuickViewShoe] = useState<Shoe | null>(null);
   const [activePage, setActivePage] = useState<"home" | "about" | "faq" | "new-arrivals">("home");
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+
+  // User Profile Session Persistence
+  const [userSession, setUserSession] = useState<UserSession | null>(() => {
+    try {
+      const saved = localStorage.getItem("stepx_user_session");
+      return saved ? JSON.parse(saved) : null;
+    } catch (err) {
+      return null;
+    }
+  });
+
+  const handleSignInSuccess = (session: UserSession) => {
+    setUserSession(session);
+    try {
+      localStorage.setItem("stepx_user_session", JSON.stringify(session));
+    } catch (err) {
+      console.error("Could not write session to disk", err);
+    }
+  };
+
+  const handleSignOut = () => {
+    setUserSession(null);
+    try {
+      localStorage.removeItem("stepx_user_session");
+    } catch (err) {
+      console.error("Could not clean session from disk", err);
+    }
+  };
+
 
   // Cart Handlers
   const handleAddToCart = (shoe: Shoe, color: ColorOption, size: number) => {
@@ -104,6 +135,9 @@ export default function App() {
         onSelectShoeProduct={(shoe) => setActiveQuickViewShoe(shoe)}
         activePage={activePage}
         onChangePage={setActivePage}
+        userSession={userSession}
+        onSignOut={handleSignOut}
+        onOpenSignIn={() => setIsSignInOpen(true)}
       />
 
       {/* Main Sections Body */}
@@ -199,6 +233,7 @@ export default function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveFromCart={handleRemoveFromCart}
         onClearCart={handleClearCart}
+        onExploreExclusive={() => handleScrollToSection("catalog-sec")}
       />
 
       {/* Details Quickview Specifications modal popup */}
@@ -207,6 +242,13 @@ export default function App() {
         onClose={() => setActiveQuickViewShoe(null)}
         onAddToCart={handleAddToCart}
         onOpenCart={() => setIsCartOpen(true)}
+      />
+
+      {/* Global Authorize Membership modal popup */}
+      <SignInModal
+        isOpen={isSignInOpen}
+        onClose={() => setIsSignInOpen(false)}
+        onSignInSuccess={handleSignInSuccess}
       />
     </div>
   );
