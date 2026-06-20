@@ -22,7 +22,6 @@ export default function HeroSection({ onAddToCart, onOpenCart }: HeroSectionProp
   const handlePreOrder = () => {
     // Add custom selection to cart
     onAddToCart(flagshipShoe, selectedColor, selectedSize);
-    onOpenCart();
   };
 
   return (

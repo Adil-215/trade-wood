@@ -19,9 +19,15 @@ export interface AthleteProfile {
   points: number;
 }
 
+export interface UserRecord {
+  email: string;
+  name: string;
+}
+
 export interface OrderInput {
   email: string;
   customerName: string;
+  phone: string;
   address: string;
   city: string;
   zip: string;
@@ -96,6 +102,30 @@ export async function syncAthleteProfile(profile: AthleteProfile): Promise<boole
 }
 
 /**
+ * Sync (Create or update) user details in the general users database table
+ */
+export async function syncUserRecord(email: string, name: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("users")
+      .upsert({
+        email: email.toLowerCase(),
+        name: name,
+        created_at: new Date().toISOString()
+      }, { onConflict: "email" });
+
+    if (error) {
+      console.warn("Supabase upsert user warning (users table might be missing):", error.message);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.error("Failed to sync user record:", err.message);
+    return false;
+  }
+}
+
+/**
  * Create a new order purchase log in the database
  */
 export async function createOrderLog(order: OrderInput): Promise<boolean> {
@@ -105,6 +135,7 @@ export async function createOrderLog(order: OrderInput): Promise<boolean> {
       .insert({
         email: order.email.toLowerCase(),
         customer_name: order.customerName,
+        phone: order.phone,
         address: order.address,
         city: order.city,
         zip: order.zip,

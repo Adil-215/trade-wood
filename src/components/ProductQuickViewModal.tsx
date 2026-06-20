@@ -37,7 +37,6 @@ export default function ProductQuickViewModal({
   const handleAddToBag = () => {
     onAddToCart(shoe, selectedColor, selectedSize);
     onClose();
-    onOpenCart();
   };
 
   return (

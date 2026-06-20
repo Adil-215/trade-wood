@@ -46,7 +46,6 @@ export default function AccessoriesSection({
     const config = cardConfig[acc.id] || { color: acc.colors[0] };
     // Accessories have size: 0 (Universal Size)
     onAddToCart(acc, config.color, 0);
-    onOpenCart();
   };
 
   return (

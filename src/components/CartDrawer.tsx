@@ -30,9 +30,11 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const [isCheckoutCompleted, setIsCheckoutCompleted] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isCod, setIsCod] = useState(false);
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     email: "",
+    phone: "",
     address: "",
     city: "",
     zip: "",
@@ -54,12 +56,13 @@ export default function CartDrawer({
       const orderPayload = {
         email: shippingInfo.email,
         customerName: shippingInfo.name,
+        phone: shippingInfo.phone,
         address: shippingInfo.address,
         city: shippingInfo.city,
         zip: shippingInfo.zip,
-        bankName: shippingInfo.bankName,
-        routingNumber: shippingInfo.routingNumber,
-        bankAccount: shippingInfo.bankAccount,
+        bankName: isCod ? "Cash on Delivery" : shippingInfo.bankName,
+        routingNumber: isCod ? "COD" : shippingInfo.routingNumber,
+        bankAccount: isCod ? "COD" : shippingInfo.bankAccount,
         subtotal: subtotal,
         total: total,
         items: cartItems.map((item) => ({
@@ -134,9 +137,9 @@ export default function CartDrawer({
             </div>
 
             {/* Cart Body */}
-            <div id="cart-drawer-body" className="flex-1 overflow-y-auto p-6">
-              {isCheckoutCompleted ? (
-                /* Success Screen */
+            {isCheckoutCompleted ? (
+              <div id="cart-drawer-body" className="flex-1 overflow-y-auto p-6">
+                {/* Success Screen */}
                 <motion.div
                   id="checkout-success-container"
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -167,8 +170,10 @@ export default function CartDrawer({
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </button>
                 </motion.div>
-              ) : cartItems.length === 0 ? (
-                /* Empty Screen */
+              </div>
+            ) : cartItems.length === 0 ? (
+              <div id="cart-drawer-body" className="flex-1 overflow-y-auto p-6">
+                {/* Empty Screen */}
                 <div id="empty-cart-container" className="flex h-full flex-col items-center justify-center text-center">
                   <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-stone-100 text-stone-400">
                     <ShoppingBag className="h-10 w-10 stroke-1" />
@@ -192,181 +197,238 @@ export default function CartDrawer({
                     EXPLORE DESIGNS
                   </button>
                 </div>
-              ) : (
-                /* Products List / Checkout form split-view or simple toggle */
-                <div id="cart-items-list" className="space-y-6">
-                  {cartItems.map((item) => (
-                    <motion.div
-                      id={`cart-item-${item.id}`}
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      className="flex gap-4 rounded-xl border border-stone-200/60 bg-white p-4 shadow-xs"
-                    >
-                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#F7F7F5] border border-stone-100 flex items-center justify-center">
-                        <img
-                          src={item.shoe.image}
-                          alt={item.shoe.name}
-                          className="h-20 w-20 object-contain rotate-12 transition-transform hover:scale-110 rounded-lg"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col justify-between">
-                        <div>
-                          <div className="flex items-start justify-between">
-                            <h4 className="font-display text-sm font-black tracking-tight text-neutral-900 leading-tight">
-                              {item.shoe.name}
-                            </h4>
-                            <span className="font-mono text-sm font-extrabold text-[#718200]">
-                              ${item.shoe.price * item.quantity}
-                            </span>
+              </div>
+            ) : (
+              /* Active Shopping Bag State: Form covers both Scrollable Body and Fixed Footer */
+              <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="flex flex-1 flex-col overflow-hidden">
+                <div id="cart-drawer-body" className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Products List */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 font-mono">SELECTED DESIGNS</span>
+                    </div>
+                    <div id="cart-items-list" className="space-y-4">
+                      {cartItems.map((item) => (
+                        <motion.div
+                          id={`cart-item-${item.id}`}
+                          key={item.id}
+                          layout
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -100 }}
+                          className="flex gap-4 rounded-xl border border-stone-200/60 bg-white p-4 shadow-xs"
+                        >
+                          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#F7F7F5] border border-stone-100 flex items-center justify-center">
+                            <img
+                              src={item.shoe.image}
+                              alt={item.shoe.name}
+                              className="h-20 w-20 object-contain rotate-12 transition-transform hover:scale-110 rounded-lg"
+                              referrerPolicy="no-referrer"
+                            />
                           </div>
-                          <p className="text-[11px] text-neutral-500 font-mono mt-1">
-                            {item.shoe.category}
-                          </p>
-                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold text-neutral-700">
-                            <span className="inline-flex items-center gap-1 rounded bg-[#F7F7F5] px-2 py-0.5 border border-stone-200">
-                              Size: <strong className="text-stone-900">{item.selectedSize === 0 ? "O/S" : item.selectedSize}</strong>
-                            </span>
-                            <span className="inline-flex items-center gap-1 rounded bg-[#F7F7F5] px-2 py-0.5 border border-stone-200">
-                              Col:{" "}
-                              <span
-                                className={`h-2.5 w-2.5 rounded-full ${item.selectedColor.bgClass} inline-block border border-black/10`}
-                              />
-                              <strong className="text-stone-900">{item.selectedColor.name}</strong>
-                            </span>
-                          </div>
-                        </div>
+                          <div className="flex flex-1 flex-col justify-between">
+                            <div>
+                              <div className="flex items-start justify-between">
+                                <h4 className="font-display text-sm font-black tracking-tight text-neutral-900 leading-tight">
+                                  {item.shoe.name}
+                                </h4>
+                                <span className="font-mono text-sm font-extrabold text-[#718200]">
+                                  ${item.shoe.price * item.quantity}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-neutral-500 font-mono mt-1">
+                                {item.shoe.category}
+                              </p>
+                              <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold text-neutral-700">
+                                <span className="inline-flex items-center gap-1 rounded bg-[#F7F7F5] px-2 py-0.5 border border-stone-200">
+                                  Size: <strong className="text-stone-900">{item.selectedSize === 0 ? "O/S" : item.selectedSize}</strong>
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded bg-[#F7F7F5] px-2 py-0.5 border border-stone-200">
+                                  Col:{" "}
+                                  <span
+                                    className={`h-2.5 w-2.5 rounded-full ${item.selectedColor.bgClass} inline-block border border-black/10`}
+                                  />
+                                  <strong className="text-stone-900">{item.selectedColor.name}</strong>
+                                </span>
+                              </div>
+                            </div>
 
-                        <div className="mt-4 flex items-center justify-between">
-                          <div className="flex items-center rounded-full border border-stone-200 bg-stone-50 p-1">
-                            <button
-                              id={`decrease-qty-${item.id}`}
-                              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                              className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200/60 disabled:opacity-40"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="w-8 text-center text-xs font-mono font-bold">
-                              {item.quantity}
-                            </span>
-                            <button
-                              id={`increase-qty-${item.id}`}
-                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200/60"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
+                            <div className="mt-4 flex items-center justify-between">
+                              <div className="flex items-center rounded-full border border-stone-200 bg-stone-50 p-1">
+                                <button
+                                  id={`decrease-qty-${item.id}`}
+                                  type="button"
+                                  onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                                  disabled={item.quantity <= 1}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200/60 disabled:opacity-40"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="w-8 text-center text-xs font-mono font-bold">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  id={`increase-qty-${item.id}`}
+                                  type="button"
+                                  onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200/60"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+                              <button
+                                id={`remove-item-${item.id}`}
+                                type="button"
+                                onClick={() => onRemoveFromCart(item.id)}
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            id={`remove-item-${item.id}`}
-                            onClick={() => onRemoveFromCart(item.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer / Summary Pricing & Checkout Form */}
-            {cartItems.length > 0 && !isCheckoutCompleted && (
-              <div id="cart-drawer-footer" className="border-t border-stone-200 bg-white p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
-                {/* Checkout Fields Accordion */}
-                <form id="checkout-form" onSubmit={handleCheckoutSubmit} className="space-y-4 mb-4 border-b border-stone-100 pb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Lock className="h-3.5 w-3.5 text-neutral-600" />
-                    <span className="text-xs font-display font-extrabold tracking-wider text-neutral-800 uppercase">
-                      SECURE PRE-ORDER CHECKOUT
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Your Name"
-                      required
-                      value={shippingInfo.name}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })}
-                      className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email Address"
-                      required
-                      value={shippingInfo.email}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
-                      className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Full Delivery Address"
-                    required
-                    value={shippingInfo.address}
-                    onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
-                    className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
-                  />
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      placeholder="City"
-                      required
-                      value={shippingInfo.city}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
-                      className="col-span-2 rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Zip Code"
-                      required
-                      value={shippingInfo.zip}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, zip: e.target.value })}
-                      className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
-                    />
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="flex flex-col gap-2.5 border-t border-stone-100 pt-3">
-                    <span className="text-[10px] text-[#718200] font-mono font-bold uppercase tracking-widest">
-                      SECURE BANK TRANSFER BILLING
-                    </span>
+                  {/* Checkout Fields Accordion directly under products list so they scroll naturally */}
+                  <div className="border-t border-stone-250 pt-6 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lock className="h-3.5 w-3.5 text-neutral-600" />
+                      <span className="text-xs font-display font-extrabold tracking-wider text-neutral-800 uppercase">
+                        SECURE PRE-ORDER CHECKOUT
+                      </span>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
-                        placeholder="Bank Name"
+                        placeholder="Your Name"
                         required
-                        value={shippingInfo.bankName}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, bankName: e.target.value })}
+                        value={shippingInfo.name}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, name: e.target.value })}
                         className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                       />
                       <input
-                        type="text"
-                        placeholder="Routing Number (9 digits)"
+                        type="email"
+                        placeholder="Email Address"
                         required
-                        maxLength={9}
-                        value={shippingInfo.routingNumber}
-                        onChange={(e) => setShippingInfo({ ...shippingInfo, routingNumber: e.target.value })}
+                        value={shippingInfo.email}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, email: e.target.value })}
                         className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                       />
                     </div>
                     <input
-                      type="text"
-                      placeholder="Bank Account Number"
+                      type="tel"
+                      placeholder="Phone Number"
                       required
-                      value={shippingInfo.bankAccount}
-                      onChange={(e) => setShippingInfo({ ...shippingInfo, bankAccount: e.target.value })}
-                      className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-mono font-medium focus:border-black focus:bg-white focus:ring-0"
+                      value={shippingInfo.phone}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                      className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                     />
-                  </div>
+                    <input
+                      type="text"
+                      placeholder="Full Delivery Address"
+                      required
+                      value={shippingInfo.address}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
+                      className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        placeholder="City"
+                        required
+                        value={shippingInfo.city}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
+                        className="col-span-2 rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Zip Code"
+                        required
+                        value={shippingInfo.zip}
+                        onChange={(e) => setShippingInfo({ ...shippingInfo, zip: e.target.value })}
+                        className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                      />
+                    </div>
 
+                    {/* Cash on Delivery option toggle */}
+                    <div
+                      id="cod-option-toggle"
+                      onClick={() => setIsCod(!isCod)}
+                      className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer select-none transition-all ${
+                        isCod
+                          ? "border-black bg-neutral-950 text-white shadow-sm"
+                          : "border-stone-200 bg-[#F7F7F5] hover:bg-stone-200/40 text-neutral-800"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        id="cod-checkbox"
+                        checked={isCod}
+                        onChange={(e) => setIsCod(e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`h-4 w-4 rounded border-stone-300 text-black focus:ring-black cursor-pointer ${
+                          isCod ? "accent-white bg-white border-white" : "accent-black"
+                        }`}
+                      />
+                      <label htmlFor="cod-checkbox" className="text-xs font-bold cursor-pointer font-display leading-none">
+                        Cash on Delivery (COD)
+                      </label>
+                    </div>
+
+                    {/* Secure Bank Transfer Section (Only visible if COD is not selected) */}
+                    <AnimatePresence initial={false}>
+                      {!isCod && (
+                        <motion.div
+                          id="bank-billing-container"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex flex-col gap-2.5 border-t border-stone-200 pt-4 mt-2">
+                            <span className="text-[10px] text-[#718200] font-mono font-bold uppercase tracking-widest">
+                              SECURE BANK TRANSFER BILLING
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                placeholder="Bank Name"
+                                required={!isCod}
+                                value={shippingInfo.bankName}
+                                onChange={(e) => setShippingInfo({ ...shippingInfo, bankName: e.target.value })}
+                                className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Routing Number (9 digits)"
+                                required={!isCod}
+                                maxLength={9}
+                                value={shippingInfo.routingNumber}
+                                onChange={(e) => setShippingInfo({ ...shippingInfo, routingNumber: e.target.value })}
+                                className="rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Bank Account Number"
+                              required={!isCod}
+                              value={shippingInfo.bankAccount}
+                              onChange={(e) => setShippingInfo({ ...shippingInfo, bankAccount: e.target.value })}
+                              className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-mono font-medium focus:border-black focus:bg-white focus:ring-0"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Sticky Footer */}
+                <div id="cart-drawer-footer" className="border-t border-stone-200 bg-white p-6 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
                   {/* Pricing Breakdown */}
-                  <div className="space-y-1.5 border-t border-stone-100 pt-3 text-xs font-mono font-semibold text-stone-600">
+                  <div className="space-y-1.5 text-xs font-mono font-semibold text-stone-600 mb-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
                       <span className="text-neutral-900">${subtotal.toFixed(2)}</span>
@@ -398,7 +460,7 @@ export default function CartDrawer({
                     id="submit-checkout-btn"
                     type="submit"
                     disabled={isCheckingOut}
-                    className="group relative flex w-full items-center justify-center gap-2 rounded-full bg-black py-4 px-6 text-sm font-bold text-white transition-all hover:bg-neutral-800 disabled:bg-neutral-600"
+                    className="group relative flex w-full items-center justify-center gap-2 rounded-full bg-black py-4 px-6 text-sm font-bold text-white transition-all hover:bg-neutral-800 disabled:bg-neutral-600 cursor-pointer"
                   >
                     {isCheckingOut ? (
                       <span className="flex items-center gap-2">
@@ -413,8 +475,8 @@ export default function CartDrawer({
                       </>
                     )}
                   </button>
-                </form>
-              </div>
+                </div>
+              </form>
             )}
           </motion.div>
         </>

@@ -38,7 +38,6 @@ export default function ShowcaseSection({
 
   const handleBuyNow = () => {
     onAddToCart(currentShoe, userSelectedColor, currentSize);
-    onOpenCart();
   };
 
   // Diagnostic or mechanical stats mock for the exclusive showcase

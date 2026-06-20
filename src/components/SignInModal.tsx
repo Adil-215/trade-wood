@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserSession } from "../types";
-import { getAthleteProfile, syncAthleteProfile } from "../lib/supabase";
+import { getAthleteProfile, syncAthleteProfile, syncUserRecord } from "../lib/supabase";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -82,6 +82,8 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
             streakDays: existingProfile.streakDays,
             points: existingProfile.points
           };
+          // Sync with general users list table too
+          await syncUserRecord(session.email, session.name);
           setSuccess("Signed in successfully! Loaded profile from Supabase.");
         } else {
           // If not exists in DB yet, create a default profile on the fly
@@ -94,6 +96,7 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           };
           // Synchronize/upsert to Supabase
           await syncAthleteProfile(session);
+          await syncUserRecord(session.email, session.name);
           setSuccess("Profile initialized and synced securely with Supabase!");
         }
         
@@ -112,8 +115,10 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           points: 50 // Signup welcome points
         };
 
-        // Write directly to Supabase
+        // Write directly to standard tables
         const isSynced = await syncAthleteProfile(session);
+        await syncUserRecord(session.email, session.name);
+        
         if (isSynced) {
           setSuccess("Athlete membership generated and saved in Supabase!");
         } else {

@@ -65,7 +65,6 @@ export default function ProductCatalog({
   const handleAddCardToCart = (shoe: Shoe) => {
     const config = cardConfig[shoe.id] || { size: shoe.sizes[0], color: shoe.colors[0] };
     onAddToCart(shoe, config.color, config.size);
-    onOpenCart();
   };
 
   return (
