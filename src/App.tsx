@@ -22,6 +22,7 @@ import SignInModal from "./components/SignInModal";
 
 import { CartItem, ColorOption, Shoe, UserSession } from "./types";
 import { catalogList } from "./data";
+import { updateUserStatus } from "./lib/supabase";
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -50,6 +51,9 @@ export default function App() {
   };
 
   const handleSignOut = () => {
+    if (userSession?.email) {
+      updateUserStatus(userSession.email, "suspended");
+    }
     setUserSession(null);
     try {
       localStorage.removeItem("stepx_user_session");

@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserSession } from "../types";
-import { getAthleteProfile, syncAthleteProfile, syncUserRecord } from "../lib/supabase";
+import { getAthleteProfile, syncAthleteProfile, syncUserRecord, updateUserStatus } from "../lib/supabase";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -84,7 +84,8 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           };
           // Sync with general users list table too
           await syncUserRecord(session.email, session.name);
-          setSuccess("Signed in successfully! Loaded profile from Supabase.");
+          await updateUserStatus(session.email, "active");
+          setSuccess("Congratulations!");
         } else {
           // If not exists in DB yet, create a default profile on the fly
           const generatedName = emailLower.split("@")[0].replace(".", " ");
@@ -97,7 +98,8 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           // Synchronize/upsert to Supabase
           await syncAthleteProfile(session);
           await syncUserRecord(session.email, session.name);
-          setSuccess("Profile initialized and synced securely with Supabase!");
+          await updateUserStatus(session.email, "active");
+          setSuccess("Congratulations!");
         }
         
         setTimeout(() => {
@@ -118,12 +120,9 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
         // Write directly to standard tables
         const isSynced = await syncAthleteProfile(session);
         await syncUserRecord(session.email, session.name);
+        await updateUserStatus(session.email, "active");
         
-        if (isSynced) {
-          setSuccess("Athlete membership generated and saved in Supabase!");
-        } else {
-          setSuccess("Athlete profile generated successfully!");
-        }
+        setSuccess("Congratulations!");
 
         setTimeout(() => {
           setIsLoading(false);

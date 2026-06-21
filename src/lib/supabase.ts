@@ -31,6 +31,7 @@ export interface OrderInput {
   address: string;
   city: string;
   zip: string;
+  country: string;
   bankName: string;
   routingNumber: string;
   bankAccount: string;
@@ -89,7 +90,8 @@ export async function syncAthleteProfile(profile: AthleteProfile): Promise<boole
         email: profile.email.toLowerCase(),
         name: profile.name,
         streak_days: profile.streakDays,
-        points: profile.points
+        points: profile.points,
+        status: "active"
       }, { onConflict: "email" });
 
     if (error) {
@@ -113,6 +115,7 @@ export async function syncUserRecord(email: string, name: string): Promise<boole
       .upsert({
         email: email.toLowerCase(),
         name: name,
+        status: "active",
         created_at: new Date().toISOString()
       }, { onConflict: "email" });
 
@@ -123,6 +126,36 @@ export async function syncUserRecord(email: string, name: string): Promise<boole
     return true;
   } catch (err: any) {
     console.error("Failed to sync user record:", err.message);
+    return false;
+  }
+}
+
+/**
+ * Update user and athlete status (e.g. active, suspended)
+ */
+export async function updateUserStatus(email: string, status: "active" | "suspended"): Promise<boolean> {
+  try {
+    const emailLower = email.toLowerCase();
+    const [userRes, athleteRes] = await Promise.all([
+      supabase
+        .from("users")
+        .update({ status })
+        .eq("email", emailLower),
+      supabase
+        .from("athletes")
+        .update({ status })
+        .eq("email", emailLower)
+    ]);
+
+    if (userRes.error) {
+      console.warn("Supabase update users status warning:", userRes.error.message);
+    }
+    if (athleteRes.error) {
+      console.warn("Supabase update athletes status warning:", athleteRes.error.message);
+    }
+    return true;
+  } catch (err: any) {
+    console.error("Failed to update user status:", err.message);
     return false;
   }
 }
@@ -141,6 +174,7 @@ export async function createOrderLog(order: OrderInput): Promise<boolean> {
         address: order.address,
         city: order.city,
         zip: order.zip,
+        country: order.country,
         bank_name: order.bankName,
         routing_number: order.routingNumber,
         bank_account: order.bankAccount,

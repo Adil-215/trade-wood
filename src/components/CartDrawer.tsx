@@ -38,6 +38,7 @@ export default function CartDrawer({
     address: "",
     city: "",
     zip: "",
+    country: "",
     bankAccount: "",
     bankName: "",
     routingNumber: ""
@@ -60,6 +61,7 @@ export default function CartDrawer({
         address: shippingInfo.address,
         city: shippingInfo.city,
         zip: shippingInfo.zip,
+        country: shippingInfo.country,
         bankName: isCod ? "No" : shippingInfo.bankName,
         routingNumber: isCod ? "No" : shippingInfo.routingNumber,
         bankAccount: isCod ? "No" : shippingInfo.bankAccount,
@@ -335,6 +337,34 @@ export default function CartDrawer({
                       onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
                       className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
                     />
+                    <input
+                      type="text"
+                      list="country-options"
+                      placeholder="Country"
+                      required
+                      value={shippingInfo.country}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, country: e.target.value })}
+                      className="w-full rounded-lg border border-stone-200 bg-[#F7F7F5] px-3 py-2 text-xs font-medium focus:border-black focus:bg-white focus:ring-0"
+                    />
+                    <datalist id="country-options">
+                      <option value="United States" />
+                      <option value="United Kingdom" />
+                      <option value="Canada" />
+                      <option value="Australia" />
+                      <option value="Germany" />
+                      <option value="France" />
+                      <option value="Japan" />
+                      <option value="Singapore" />
+                      <option value="Switzerland" />
+                      <option value="Netherlands" />
+                      <option value="Spain" />
+                      <option value="Italy" />
+                      <option value="Pakistan" />
+                      <option value="India" />
+                      <option value="Brazil" />
+                      <option value="Saudi Arabia" />
+                      <option value="United Arab Emirates" />
+                    </datalist>
                     <div className="grid grid-cols-3 gap-2">
                       <input
                         type="text"
