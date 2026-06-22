@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
-import { Search, ShoppingBag, User, X, CheckSquare, Sparkles } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, ShoppingBag, User, X, CheckSquare, Sparkles, Settings, Shield, Clipboard, MapPin, Phone, Globe, Edit, Save, Loader2, Mail, LogOut, CreditCard } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, Shoe, UserSession } from "../types";
+import { getAthleteProfile, updateFullProfile } from "../lib/supabase";
 
 interface NavbarProps {
   cartItems: CartItem[];
@@ -19,6 +20,7 @@ interface NavbarProps {
   userSession: UserSession | null;
   onSignOut: () => void;
   onOpenSignIn: () => void;
+  onUpdateUserSession?: (session: UserSession) => void;
 }
 
 export default function Navbar({
@@ -31,11 +33,133 @@ export default function Navbar({
   onChangePage,
   userSession,
   onSignOut,
-  onOpenSignIn
+  onOpenSignIn,
+  onUpdateUserSession
 }: NavbarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "profile" | "settings">("profile");
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [editBankDetail, setEditBankDetail] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Sync fields when userSession changes or profile modal opens
+  useEffect(() => {
+    let active = true;
+    if (userSession && isProfileOpen) {
+      setEditName(userSession.name || "");
+      setEditEmail(userSession.email || "");
+      
+      const rawAddr = userSession.address || "";
+      const sessionAddr = rawAddr === "Not Provided" ? "" : rawAddr;
+      const sessionBankMatch = sessionAddr.match(/\[Bank:\s*(.*?)\]/);
+      const cleanSessionAddr = sessionAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
+      setEditAddress(cleanSessionAddr);
+      setEditBankDetail(sessionBankMatch ? sessionBankMatch[1] : (localStorage.getItem(`stepx_bank_${userSession.email}`) || ""));
+      
+      const rawPhone = userSession.phone || "";
+      setEditPhone(rawPhone === "Not Provided" ? "" : rawPhone);
+      
+      const rawCountry = userSession.country || "";
+      setEditCountry(rawCountry === "Not Provided" ? "" : rawCountry);
+      
+      // Fetch any newly filled fields from supabase
+      getAthleteProfile(userSession.email).then((fresh) => {
+        if (active && fresh && isProfileOpen && userSession) {
+          setEditName(fresh.name || "");
+          setEditEmail(fresh.email || "");
+          
+          const rawDbAddr = fresh.address || "";
+          const dbAddr = rawDbAddr === "Not Provided" ? "" : rawDbAddr;
+          const dbBankMatch = dbAddr.match(/\[Bank:\s*(.*?)\]/);
+          const cleanDbAddr = dbAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
+          setEditAddress(cleanDbAddr);
+          setEditBankDetail(dbBankMatch ? dbBankMatch[1] : (localStorage.getItem(`stepx_bank_${fresh.email}`) || ""));
+          
+          const rawDbPhone = fresh.phone || "";
+          const cleanPhone = rawDbPhone === "Not Provided" ? "" : rawDbPhone;
+          setEditPhone(cleanPhone);
+
+          const rawDbCountry = fresh.country || "";
+          const cleanCountry = rawDbCountry === "Not Provided" ? "" : rawDbCountry;
+          setEditCountry(cleanCountry);
+          
+          if (onUpdateUserSession) {
+            onUpdateUserSession({
+              ...userSession,
+              name: fresh.name,
+              email: fresh.email,
+              address: cleanDbAddr === "" ? "Not Provided" : cleanDbAddr,
+              phone: cleanPhone === "" ? "Not Provided" : cleanPhone,
+              country: cleanCountry === "" ? "Not Provided" : cleanCountry
+            });
+          }
+        }
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [isProfileOpen, userSession]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userSession) return;
+    setIsSavingProfile(true);
+    setSaveError(null);
+    setSaveSuccess(null);
+
+    const bankSuffix = editBankDetail.trim() ? ` [Bank: ${editBankDetail.trim()}]` : "";
+    const combinedAddress = editAddress.trim() + bankSuffix;
+
+    const result = await updateFullProfile(userSession.email, {
+      name: editName,
+      email: editEmail,
+      address: combinedAddress,
+      phone: editPhone,
+      country: editCountry
+    });
+
+    if (result.success) {
+      if (editBankDetail.trim()) {
+        try {
+          localStorage.setItem(`stepx_bank_${editEmail}`, editBankDetail.trim());
+        } catch (err) {
+          console.warn(err);
+        }
+      } else {
+        try {
+          localStorage.removeItem(`stepx_bank_${editEmail}`);
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+      setSaveSuccess("Profile updated successfully!");
+      if (onUpdateUserSession) {
+        onUpdateUserSession({
+          ...userSession,
+          name: editName,
+          email: editEmail,
+          address: editAddress,
+          phone: editPhone,
+          country: editCountry
+        });
+      }
+      setTimeout(() => {
+        setSaveSuccess(null);
+      }, 3000);
+    } else {
+      setSaveError(result.error || "Failed to update profile.");
+    }
+    setIsSavingProfile(false);
+  };
 
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -57,7 +181,8 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-stone-200/50 bg-[#F7F7F5]/80 backdrop-blur-md transition-all">
+    <>
+      <header className="sticky top-0 z-40 w-full border-b border-stone-200/50 bg-[#F7F7F5]/80 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-6 md:px-12">
         {/* Left Section - Brand Logo */}
         <div id="navbar-brand" className="flex items-center">
@@ -189,26 +314,27 @@ export default function Navbar({
 
           {/* User Section */}
           {userSession ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden lg:inline text-xs font-mono font-semibold text-neutral-800 bg-stone-200/50 px-2.5 py-1 rounded-md">
-                Hi, {userSession.name.split(" ")[0]}!
-              </span>
-              <button
-                id="profile-trigger-btn"
-                onClick={() => setIsProfileOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[#C8E600] font-mono font-bold text-sm tracking-tight border border-[#C8E600] hover:border-black transition-colors cursor-pointer shadow-sm active:scale-95"
-                aria-label="Client Dashboard Profile"
-              >
-                {userSession.name.charAt(0).toUpperCase()}
-              </button>
-            </div>
+            <button
+              id="profile-trigger-btn"
+              onClick={() => {
+                setActiveTab("profile");
+                setIsProfileOpen(true);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-[#C8E600] font-mono font-bold text-base tracking-tight border border-[#C8E600] hover:bg-neutral-800 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+              title="Configure Profile"
+              aria-label="Client Dashboard Profile"
+            >
+              {userSession.name.charAt(0).toUpperCase()}
+            </button>
           ) : (
             <button
               id="navbar-signin-btn"
               onClick={onOpenSignIn}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-[#C8E600] text-xs font-extrabold tracking-widest uppercase hover:bg-stone-800 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-full text-stone-900 border border-stone-200 bg-white hover:bg-stone-100 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+              title="Sign In"
+              aria-label="Sign In"
             >
-              Sign In
+              <User className="h-6 w-6 stroke-1.5" />
             </button>
           )}
         </div>
@@ -237,6 +363,7 @@ export default function Navbar({
           </div>
         </div>
       </div>
+    </header>
 
       {/* --- EXTRA PREMIUM INTERACTION: SEARCH OVERLAY --- */}
       <AnimatePresence>
@@ -339,92 +466,208 @@ export default function Navbar({
 
       {/* --- USER ACCOUNT DASHBOARD PROMPT --- */}
       <AnimatePresence>
-        {isProfileOpen && userSession && (
+        {isProfileOpen && (
           <motion.div
             id="profile-dialog-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+            onClick={() => setIsProfileOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs cursor-pointer"
           >
             <motion.div
               id="profile-dialog-box"
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.92, y: 15 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-sm rounded-2xl bg-[#F7F7F5] p-6 shadow-2xl border border-stone-200"
+              exit={{ scale: 0.92, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl bg-[#F7F7F5] p-6 shadow-2xl border border-stone-200 transition-all duration-300 cursor-default"
             >
-              <div className="flex items-center justify-between border-b border-stone-200 pb-4">
+              <div className="flex items-center justify-between border-b border-stone-200 pb-3">
                 <span className="font-display text-xs font-black tracking-widest text-neutral-800 uppercase flex items-center gap-1.5">
                   <Sparkles className="h-4 w-4 text-[#C8E600]" />
-                  STEPX ATHLETE CLUB
+                  StepX Account Details
                 </span>
                 <button
                   id="close-profile-btn"
                   onClick={() => setIsProfileOpen(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-100 text-stone-600 hover:bg-black hover:text-white"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 text-stone-800 hover:bg-black hover:text-[#C8E600] border border-stone-300 transition-colors cursor-pointer active:scale-90"
+                  title="Close Options"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="py-6 flex flex-col items-center text-center">
-                <div className="relative h-16 w-16 mb-4 rounded-full bg-black text-[#C8E600] flex items-center justify-center text-lg font-bold font-mono border-2 border-[#C8E600] shadow-sm">
-                  {userSession.name.charAt(0).toUpperCase()}
-                  <div className="absolute right-0 bottom-0 h-3 w-3 rounded-full bg-[#C8E600] border-2 border-white animate-pulse" />
+              {userSession ? (
+                <form onSubmit={handleSaveProfile} className="py-4 space-y-4 max-h-[460px] overflow-y-auto px-1">
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <input
+                        type="text"
+                        required
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <input
+                        type="email"
+                        required
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Shipping Address
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. 123 Elite Athlete Way"
+                        value={editAddress}
+                        onChange={(e) => setEditAddress(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Contact / Phone Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <input
+                        type="tel"
+                        placeholder="e.g. +1 (555) 0199"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Bank Details (Bank Name & Routing/Account Numbers)
+                    </label>
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <input
+                        type="text"
+                        placeholder="e.g. Chase Bank, routing: 12345, account: 67890"
+                        value={editBankDetail}
+                        onChange={(e) => setEditBankDetail(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
+                      Country Location
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
+                      <select
+                        value={editCountry}
+                        onChange={(e) => setEditCountry(e.target.value)}
+                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      >
+                        <option value="">Select Country</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Switzerland">Switzerland</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Pakistan">Pakistan</option>
+                        <option value="India">India</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Saudi Arabia">Saudi Arabia</option>
+                        <option value="United Arab Emirates">United Arab Emirates</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {saveSuccess && (
+                    <div className="bg-emerald-50 text-emerald-800 text-[10px] font-bold p-2.5 rounded-lg border border-emerald-200 flex items-center gap-1.5">
+                      <CheckSquare className="h-4 w-4 shrink-0 text-emerald-600" />
+                      {saveSuccess}
+                    </div>
+                  )}
+
+                  {saveError && (
+                    <div className="bg-rose-50 text-rose-800 text-[10px] font-bold p-2.5 rounded-lg border border-rose-200 flex items-center gap-1.5">
+                      <X className="h-4 w-4 shrink-0 text-rose-600" />
+                      {saveError}
+                    </div>
+                  )}
+
+                  <div className="space-y-2 pt-2 border-t border-stone-200">
+                    <button
+                      type="submit"
+                      disabled={isSavingProfile}
+                      className="w-full rounded-full bg-black py-2.5 text-xs font-bold text-white hover:bg-neutral-800 transition-all font-display tracking-widest uppercase flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-98 shadow-sm"
+                    >
+                      {isSavingProfile ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save Profile Details
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSignOut();
+                        setIsProfileOpen(false);
+                      }}
+                      className="w-full rounded-full bg-white border border-stone-200 py-2.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-stone-50 transition-all font-display tracking-widest uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-xs"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out of Account
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="py-6 text-center text-xs text-stone-500 font-mono">
+                  Please sign in to access your profile settings.
                 </div>
-                <h3 className="font-display text-base font-black text-neutral-900 leading-tight">
-                  {userSession.name}
-                </h3>
-                <p className="font-mono text-[10px] text-neutral-500 mt-1 uppercase max-w-[240px] truncate">
-                  {userSession.email}
-                </p>
-
-                <div className="w-full mt-6 bg-white border border-stone-200/80 rounded-xl p-4 text-left space-y-3.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-neutral-500 font-medium">Daily Fitness Streak</span>
-                    <span className="font-mono text-xs font-extrabold text-[#718200] bg-[#EDF5D8] px-2 py-0.5 rounded">
-                      {userSession.streakDays} Days 🔥
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-neutral-500 font-medium">Member Reward Tier</span>
-                    <span className="font-mono text-xs font-extrabold text-neutral-900 bg-[#C8E600] px-2 py-0.5 rounded">
-                      Level {Math.floor(userSession.points / 150) + 1} • {userSession.points}pts
-                    </span>
-                  </div>
-                  <div className="w-full bg-stone-100 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-black h-1.5 rounded-full" style={{ width: `${Math.min(100, Math.max(0, ((userSession.points % 150) / 150) * 100))}%` }} />
-                  </div>
-                  <span className="block text-[9px] text-stone-500 font-mono text-center">
-                    {Math.max(0, 150 - (userSession.points % 150))} pts towards next loyalty gift box
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2 mt-2">
-                <button
-                  id="profile-dashboard-btn"
-                  onClick={() => setIsProfileOpen(false)}
-                  className="w-full rounded-full bg-black py-3 text-xs font-bold text-white hover:bg-neutral-800 transition-all font-display tracking-widest uppercase"
-                >
-                  ENTER CLUB DASHBOARD
-                </button>
-                <button
-                  id="profile-logout-btn"
-                  onClick={() => {
-                    onSignOut();
-                    setIsProfileOpen(false);
-                  }}
-                  className="w-full rounded-full bg-white border border-stone-200 py-3 text-xs font-bold text-stone-600 hover:text-black hover:bg-stone-50 transition-all font-display tracking-widest uppercase"
-                >
-                  SIGN OUT
-                </button>
-              </div>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

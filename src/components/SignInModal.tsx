@@ -4,10 +4,10 @@
  */
 
 import React, { useState } from "react";
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle, Phone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserSession } from "../types";
-import { getAthleteProfile, syncAthleteProfile, syncUserRecord, updateUserStatus } from "../lib/supabase";
+import { getAthleteProfile, syncAthleteProfile, syncUserRecord, updateUserStatus, saveLocalPassword, getLocalPassword } from "../lib/supabase";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +52,10 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
         setError("Please enter your full athletic name.");
         return false;
       }
+      if (!phone.trim()) {
+        setError("Please enter your phone number.");
+        return false;
+      }
       if (password !== confirmPassword) {
         setError("Confirmation password does not match.");
         return false;
@@ -76,6 +81,23 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
         
         let session: UserSession;
         if (existingProfile) {
+          // Password check/verification
+          const dbPassword = existingProfile.password;
+          const localPassword = getLocalPassword(emailLower);
+          const expectedPassword = dbPassword || localPassword;
+          
+          if (expectedPassword) {
+            if (password !== expectedPassword) {
+              setError("Incorrect password");
+              setIsLoading(false);
+              return;
+            }
+          } else {
+            // First time saving a password for an existing account with empty password field
+            saveLocalPassword(emailLower, password);
+            await syncUserRecord(existingProfile.email, existingProfile.name, undefined, undefined, undefined, password);
+          }
+
           session = {
             email: existingProfile.email,
             name: existingProfile.name,
@@ -83,23 +105,13 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
             points: existingProfile.points
           };
           // Sync with general users list table too
-          await syncUserRecord(session.email, session.name);
+          await syncUserRecord(session.email, session.name, undefined, undefined, undefined, password);
           await updateUserStatus(session.email, "active");
           setSuccess("Congratulations!");
         } else {
-          // If not exists in DB yet, create a default profile on the fly
-          const generatedName = emailLower.split("@")[0].replace(".", " ");
-          session = {
-            email: emailLower,
-            name: generatedName.charAt(0).toUpperCase() + generatedName.slice(1),
-            streakDays: 12,
-            points: 240
-          };
-          // Synchronize/upsert to Supabase
-          await syncAthleteProfile(session);
-          await syncUserRecord(session.email, session.name);
-          await updateUserStatus(session.email, "active");
-          setSuccess("Congratulations!");
+          setError("This account does not exist");
+          setIsLoading(false);
+          return;
         }
         
         setTimeout(() => {
@@ -114,13 +126,17 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           email: emailLower,
           name: name.trim(),
           streakDays: 1, // Fresh sign up streak
-          points: 50 // Signup welcome points
+          points: 50, // Signup welcome points
+          phone: phone.trim()
         };
 
         // Write directly to standard tables
-        const isSynced = await syncAthleteProfile(session);
-        await syncUserRecord(session.email, session.name);
+        const isSynced = await syncAthleteProfile({ ...session, password });
+        await syncUserRecord(session.email, session.name, undefined, session.phone, undefined, password);
         await updateUserStatus(session.email, "active");
+        
+        // Save password locally as well
+        saveLocalPassword(emailLower, password);
         
         setSuccess("Congratulations!");
 
@@ -207,7 +223,7 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
                       : "text-stone-500 hover:text-black"
                   }`}
                 >
-                  Sign In
+                  Log In
                 </button>
                 <button
                   id="tab-signup-trigger"
@@ -228,15 +244,15 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
 
               {/* Message Alerts */}
               {error && (
-                <div id="signin-error-alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
-                  <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                <div id="signin-error-alert" className="mb-4 flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
+                  <AlertCircle className="h-4.5 w-4.5 shrink-0" />
                   <span className="font-semibold">{error}</span>
                 </div>
               )}
 
               {success && (
-                <div id="signin-success-alert" className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
-                  <CheckCircle2 className="h-4.5 w-4.5 shrink-0 mt-0.5 text-emerald-600" />
+                <div id="signin-success-alert" className="mb-4 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
+                  <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
                   <span className="font-semibold">{success}</span>
                 </div>
               )}
@@ -244,22 +260,41 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
               {/* Main Auth Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {activeTab === "signup" && (
-                  <div>
-                    <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                      Full Athletic Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                      <input
-                        type="text"
-                        placeholder="e.g. Clark Kent"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        disabled={isLoading}
-                        className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
-                      />
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                        Full Athletic Name
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                        <input
+                          type="text"
+                          placeholder="e.g. Clark Kent"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                        />
+                      </div>
                     </div>
-                  </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                        Phone Number
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                        <input
+                          type="tel"
+                          placeholder="e.g. +1 (555) 123-4567"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 <div>

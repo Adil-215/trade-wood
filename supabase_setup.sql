@@ -14,7 +14,14 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INT DEFAULT 1;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS country TEXT;
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT;
+
 ALTER TABLE athletes ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS country TEXT;
 
 -- Run this to update existing Cash on Delivery (COD) orders to state "No" for bank info:
 UPDATE orders
@@ -34,6 +41,9 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT PRIMARY KEY,
   name TEXT,
   status TEXT DEFAULT 'active',
+  address TEXT,
+  phone TEXT,
+  country TEXT,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -50,6 +60,9 @@ CREATE TABLE IF NOT EXISTS athletes (
   streak_days INT DEFAULT 0,
   points INT DEFAULT 0,
   status TEXT DEFAULT 'active',
+  address TEXT,
+  phone TEXT,
+  country TEXT,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

@@ -51,14 +51,17 @@ export default function App() {
   };
 
   const handleSignOut = () => {
-    if (userSession?.email) {
-      updateUserStatus(userSession.email, "suspended");
-    }
+    const emailToSuspend = userSession?.email;
     setUserSession(null);
     try {
       localStorage.removeItem("stepx_user_session");
     } catch (err) {
       console.error("Could not clean session from disk", err);
+    }
+    if (emailToSuspend) {
+      updateUserStatus(emailToSuspend, "suspended").catch((err) => {
+        console.error("Failed to suspend user session status", err);
+      });
     }
   };
 
@@ -142,6 +145,7 @@ export default function App() {
         userSession={userSession}
         onSignOut={handleSignOut}
         onOpenSignIn={() => setIsSignInOpen(true)}
+        onUpdateUserSession={handleSignInSuccess}
       />
 
       {/* Main Sections Body */}

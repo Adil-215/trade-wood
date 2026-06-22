@@ -47,5 +47,8 @@ export interface UserSession {
   name: string;
   streakDays: number;
   points: number;
+  address?: string;
+  phone?: string;
+  country?: string;
 }
 
