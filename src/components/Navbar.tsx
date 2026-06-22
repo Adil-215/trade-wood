@@ -50,6 +50,7 @@ export default function Navbar({
   const [editBankAccount, setEditBankAccount] = useState("");
   const [editBankRouting, setEditBankRouting] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -59,6 +60,7 @@ export default function Navbar({
     if (!isProfileOpen) return;
 
     if (userSession) {
+      // snapping setup using available session info
       setEditName(userSession.name || "");
       setEditEmail(userSession.email || "");
       
@@ -85,6 +87,8 @@ export default function Navbar({
       
       const rawCountry = userSession.country || "";
       setEditCountry(rawCountry === "Not Provided" ? "" : rawCountry);
+      
+      setIsProfileLoading(true);
       
       // Fetch any newly filled fields from supabase once
       getAthleteProfile(userSession.email).then((fresh) => {
@@ -128,6 +132,12 @@ export default function Navbar({
               country: cleanCountry === "" ? "Not Provided" : cleanCountry
             });
           }
+        }
+      }).catch((err) => {
+        console.warn("Could not retrieve athlete profile", err);
+      }).finally(() => {
+        if (active) {
+          setIsProfileLoading(false);
         }
       });
     }
@@ -529,7 +539,13 @@ export default function Navbar({
               </div>
 
               {userSession ? (
-                <form onSubmit={handleSaveProfile} className="py-4 space-y-4 max-h-[460px] overflow-y-auto px-1">
+                <form onSubmit={handleSaveProfile} className="relative py-4 space-y-4 max-h-[460px] overflow-y-auto px-1">
+                  {isProfileLoading && (
+                    <div className="absolute inset-0 bg-[#F7F7F5]/85 backdrop-blur-xs flex flex-col items-center justify-center z-30 rounded-xl py-12">
+                      <Loader2 className="h-7 w-7 text-black animate-spin mb-2" />
+                      <span className="text-[10px] font-mono font-black text-neutral-500 tracking-wider uppercase">Loading Athlete Profile...</span>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
                       Full Name

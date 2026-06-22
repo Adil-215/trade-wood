@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { APIProvider, Map, AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { Navigation, AlertCircle } from "lucide-react";
 
@@ -20,6 +20,9 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral>({ lat: 37.7749, lng: -122.4194 }); // default: SF
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
+  const [isSelectedFeedback, setIsSelectedFeedback] = useState(false);
   const lastGeocodedAddressRef = useRef<string>("");
 
   useEffect(() => {
@@ -46,6 +49,39 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
     return () => clearTimeout(timer);
   }, [geocoder, currentAddress, map]);
 
+  // Handle Map Search
+  const handleMapSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!geocoder || !searchQuery.trim()) return;
+
+    setIsGeocoding(true);
+    setSearchFeedback(null);
+    geocoder.geocode({ address: searchQuery }, (results, status) => {
+      setIsGeocoding(false);
+      if (status === "OK" && results?.[0]) {
+        const loc = results[0].geometry.location;
+        const latLng = { lat: loc.lat(), lng: loc.lng() };
+        setMarkerPos(latLng);
+        map?.panTo(latLng);
+        map?.setZoom(15);
+        
+        const formatted = results[0].formatted_address;
+        lastGeocodedAddressRef.current = formatted;
+        onAddressSelect(formatted);
+        
+        setSearchFeedback("Found!");
+        setIsSelectedFeedback(true);
+        setTimeout(() => {
+          setSearchFeedback(null);
+          setIsSelectedFeedback(false);
+        }, 2000);
+      } else {
+        setSearchFeedback("Retry");
+        setTimeout(() => setSearchFeedback(null), 2000);
+      }
+    });
+  };
+
   // Handle map clicks
   const handleMapClick = (e: any) => {
     if (!e.detail?.latLng) return;
@@ -67,6 +103,9 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
         const formatted = results[0].formatted_address;
         lastGeocodedAddressRef.current = formatted;
         onAddressSelect(formatted);
+        
+        setIsSelectedFeedback(true);
+        setTimeout(() => setIsSelectedFeedback(false), 2000);
       }
     });
   };
@@ -121,6 +160,26 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
         />
       </Map>
 
+      {/* Floating Geosearch Bar */}
+      <form
+        onSubmit={handleMapSearch}
+        className="absolute top-2 left-2 right-2 max-w-[240px] flex items-center gap-1 bg-white/95 backdrop-blur-xs p-1 rounded-lg shadow-md border border-stone-200/80 z-10"
+      >
+        <input
+          type="text"
+          placeholder="Search location map..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 bg-transparent px-2 py-0.5 text-[9px] font-sans font-medium text-neutral-900 focus:outline-hidden border-none focus:ring-0 w-full"
+        />
+        <button
+          type="submit"
+          className="bg-black hover:bg-neutral-800 text-[#C8E600] rounded-md px-2 py-1 text-[8px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0"
+        >
+          {searchFeedback || "Search"}
+        </button>
+      </form>
+
       {/* Locate Me Button Overlay */}
       <button
         type="button"
@@ -132,9 +191,16 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
       </button>
 
       {isGeocoding && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/80 text-white rounded-full px-3 py-1 text-[10px] font-mono flex items-center gap-1.5 shadow-md">
-          <span className="h-2 w-2 rounded-full bg-[#C8E600] animate-ping" />
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-black/80 text-white rounded-full px-3 py-1 text-[9px] font-mono flex items-center gap-1.5 shadow-md z-10">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#C8E600] animate-ping" />
           Identifying Address...
+        </div>
+      )}
+
+      {isSelectedFeedback && (
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-neutral-950 text-[#C8E600] border border-neutral-800 rounded-full px-3 py-1 text-[9px] font-mono flex items-center gap-1.5 shadow-lg animate-pulse z-10">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#C8E600]" />
+          Address Written!
         </div>
       )}
     </div>
