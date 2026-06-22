@@ -8,6 +8,7 @@ import { Search, ShoppingBag, User, X, CheckSquare, Sparkles, Settings, Shield, 
 import { motion, AnimatePresence } from "motion/react";
 import { CartItem, Shoe, UserSession } from "../types";
 import { getAthleteProfile, updateFullProfile } from "../lib/supabase";
+import AddressPickerMap from "./AddressPickerMap";
 
 interface NavbarProps {
   cartItems: CartItem[];
@@ -45,7 +46,9 @@ export default function Navbar({
   const [editAddress, setEditAddress] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editCountry, setEditCountry] = useState("");
-  const [editBankDetail, setEditBankDetail] = useState("");
+  const [editBankName, setEditBankName] = useState("");
+  const [editBankAccount, setEditBankAccount] = useState("");
+  const [editBankRouting, setEditBankRouting] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -53,7 +56,9 @@ export default function Navbar({
   // Sync fields when userSession changes or profile modal opens
   useEffect(() => {
     let active = true;
-    if (userSession && isProfileOpen) {
+    if (!isProfileOpen) return;
+
+    if (userSession) {
       setEditName(userSession.name || "");
       setEditEmail(userSession.email || "");
       
@@ -62,7 +67,18 @@ export default function Navbar({
       const sessionBankMatch = sessionAddr.match(/\[Bank:\s*(.*?)\]/);
       const cleanSessionAddr = sessionAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
       setEditAddress(cleanSessionAddr);
-      setEditBankDetail(sessionBankMatch ? sessionBankMatch[1] : (localStorage.getItem(`stepx_bank_${userSession.email}`) || ""));
+      
+      const legacyVal = sessionBankMatch ? sessionBankMatch[1] : (localStorage.getItem(`stepx_bank_${userSession.email}`) || "");
+      if (legacyVal.includes("|")) {
+        const parts = legacyVal.split("|");
+        setEditBankName(parts[0] || "");
+        setEditBankAccount(parts[1] || "");
+        setEditBankRouting(parts[2] || "");
+      } else {
+        setEditBankName(legacyVal);
+        setEditBankAccount("");
+        setEditBankRouting("");
+      }
       
       const rawPhone = userSession.phone || "";
       setEditPhone(rawPhone === "Not Provided" ? "" : rawPhone);
@@ -70,9 +86,9 @@ export default function Navbar({
       const rawCountry = userSession.country || "";
       setEditCountry(rawCountry === "Not Provided" ? "" : rawCountry);
       
-      // Fetch any newly filled fields from supabase
+      // Fetch any newly filled fields from supabase once
       getAthleteProfile(userSession.email).then((fresh) => {
-        if (active && fresh && isProfileOpen && userSession) {
+        if (active && fresh && isProfileOpen) {
           setEditName(fresh.name || "");
           setEditEmail(fresh.email || "");
           
@@ -81,7 +97,18 @@ export default function Navbar({
           const dbBankMatch = dbAddr.match(/\[Bank:\s*(.*?)\]/);
           const cleanDbAddr = dbAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
           setEditAddress(cleanDbAddr);
-          setEditBankDetail(dbBankMatch ? dbBankMatch[1] : (localStorage.getItem(`stepx_bank_${fresh.email}`) || ""));
+          
+          const legacyDbVal = dbBankMatch ? dbBankMatch[1] : (localStorage.getItem(`stepx_bank_${fresh.email}`) || "");
+          if (legacyDbVal.includes("|")) {
+            const parts = legacyDbVal.split("|");
+            setEditBankName(parts[0] || "");
+            setEditBankAccount(parts[1] || "");
+            setEditBankRouting(parts[2] || "");
+          } else {
+            setEditBankName(legacyDbVal);
+            setEditBankAccount("");
+            setEditBankRouting("");
+          }
           
           const rawDbPhone = fresh.phone || "";
           const cleanPhone = rawDbPhone === "Not Provided" ? "" : rawDbPhone;
@@ -107,7 +134,7 @@ export default function Navbar({
     return () => {
       active = false;
     };
-  }, [isProfileOpen, userSession]);
+  }, [isProfileOpen]); // ONLY reload when modal opens
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +143,10 @@ export default function Navbar({
     setSaveError(null);
     setSaveSuccess(null);
 
-    const bankSuffix = editBankDetail.trim() ? ` [Bank: ${editBankDetail.trim()}]` : "";
+    const bankStr = (editBankName.trim() || editBankAccount.trim() || editBankRouting.trim())
+      ? `${editBankName.trim()}|${editBankAccount.trim()}|${editBankRouting.trim()}`
+      : "";
+    const bankSuffix = bankStr ? ` [Bank: ${bankStr}]` : "";
     const combinedAddress = editAddress.trim() + bankSuffix;
 
     const result = await updateFullProfile(userSession.email, {
@@ -128,9 +158,9 @@ export default function Navbar({
     });
 
     if (result.success) {
-      if (editBankDetail.trim()) {
+      if (bankStr) {
         try {
-          localStorage.setItem(`stepx_bank_${editEmail}`, editBankDetail.trim());
+          localStorage.setItem(`stepx_bank_${editEmail}`, bankStr);
         } catch (err) {
           console.warn(err);
         }
@@ -534,9 +564,9 @@ export default function Navbar({
 
                   <div>
                     <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
-                      Shipping Address
+                      Shipping Address (or select from map below)
                     </label>
-                    <div className="relative">
+                    <div className="relative mb-2">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
                       <input
                         type="text"
@@ -544,6 +574,13 @@ export default function Navbar({
                         value={editAddress}
                         onChange={(e) => setEditAddress(e.target.value)}
                         className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                      />
+                    </div>
+                    {/* Interactive Google Map location picker */}
+                    <div className="mt-2.5">
+                      <AddressPickerMap
+                        currentAddress={editAddress}
+                        onAddressSelect={(newAddr) => setEditAddress(newAddr)}
                       />
                     </div>
                   </div>
@@ -564,19 +601,53 @@ export default function Navbar({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
-                      Bank Details (Bank Name & Routing/Account Numbers)
-                    </label>
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
-                      <input
-                        type="text"
-                        placeholder="e.g. Chase Bank, routing: 12345, account: 67890"
-                        value={editBankDetail}
-                        onChange={(e) => setEditBankDetail(e.target.value)}
-                        className="w-full rounded-lg border border-stone-200 bg-white pl-9 pr-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
-                      />
+                  {/* Split Bank Details Section */}
+                  <div className="space-y-3.5 border-t border-stone-200/60 pt-3">
+                    <span className="block text-[10px] font-mono font-black text-[#718200] uppercase tracking-widest flex items-center gap-1.5">
+                      <CreditCard className="h-4 w-4" />
+                      Bank Transfer Settings
+                    </span>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      <div>
+                        <label className="block text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                          Bank Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Chase Bank"
+                          value={editBankName}
+                          onChange={(e) => setEditBankName(e.target.value)}
+                          className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                            Account Number
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 123456789"
+                            value={editBankAccount}
+                            onChange={(e) => setEditBankAccount(e.target.value)}
+                            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-wider mb-1">
+                            IFSC / SWIFT / Routing Code
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. CHASUS33"
+                            value={editBankRouting}
+                            onChange={(e) => setEditBankRouting(e.target.value)}
+                            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs font-medium focus:border-black focus:ring-0 outline-hidden text-neutral-900 shadow-xs"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
