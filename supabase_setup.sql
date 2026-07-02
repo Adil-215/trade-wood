@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS users (
   address TEXT,
   phone TEXT,
   country TEXT,
+  bank_name TEXT DEFAULT '',
+  routing_number TEXT DEFAULT '',
+  bank_account TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -63,8 +66,20 @@ CREATE TABLE IF NOT EXISTS athletes (
   address TEXT,
   phone TEXT,
   country TEXT,
+  bank_name TEXT DEFAULT '',
+  routing_number TEXT DEFAULT '',
+  bank_account TEXT DEFAULT '',
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Safe migrations: Alter tables if they already exist
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_name TEXT DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number TEXT DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bank_account TEXT DEFAULT '';
+
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS bank_name TEXT DEFAULT '';
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS routing_number TEXT DEFAULT '';
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS bank_account TEXT DEFAULT '';
 
 -- Enable RLS on athletes
 ALTER TABLE athletes ENABLE ROW LEVEL SECURITY;

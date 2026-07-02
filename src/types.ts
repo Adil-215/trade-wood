@@ -50,5 +50,8 @@ export interface UserSession {
   address?: string;
   phone?: string;
   country?: string;
+  bankName?: string;
+  bankRouting?: string;
+  bankAccount?: string;
 }
 

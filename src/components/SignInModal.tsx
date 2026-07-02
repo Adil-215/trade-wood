@@ -4,10 +4,11 @@
  */
 
 import React, { useState } from "react";
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle, Phone } from "lucide-react";
+import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle, Phone, MapPin, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { UserSession } from "../types";
 import { getAthleteProfile, syncAthleteProfile, syncUserRecord, updateUserStatus, saveLocalPassword, getLocalPassword } from "../lib/supabase";
+import AddressPickerMap from "./AddressPickerMap";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [country, setCountry] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
   const [showPassword, setShowPassword] = useState(false);
@@ -54,6 +57,14 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
       }
       if (!phone.trim()) {
         setError("Please enter your phone number.");
+        return false;
+      }
+      if (!address.trim()) {
+        setError("Please enter your shipping address.");
+        return false;
+      }
+      if (!country.trim()) {
+        setError("Please select your country.");
         return false;
       }
       if (password !== confirmPassword) {
@@ -127,12 +138,14 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
           name: name.trim(),
           streakDays: 1, // Fresh sign up streak
           points: 50, // Signup welcome points
-          phone: phone.trim()
+          phone: phone.trim(),
+          address: address.trim(),
+          country: country.trim()
         };
 
         // Write directly to standard tables
         const isSynced = await syncAthleteProfile({ ...session, password });
-        await syncUserRecord(session.email, session.name, undefined, session.phone, undefined, password);
+        await syncUserRecord(session.email, session.name, session.address, session.phone, session.country, password);
         await updateUserStatus(session.email, "active");
         
         // Save password locally as well
@@ -259,103 +272,165 @@ export default function SignInModal({ isOpen, onClose, onSignInSuccess }: SignIn
 
               {/* Main Auth Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {activeTab === "signup" && (
-                  <>
-                    <div>
-                      <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                        Full Athletic Name
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                        <input
-                          type="text"
-                          placeholder="e.g. Clark Kent"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          disabled={isLoading}
-                          className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                <div className="max-h-[340px] overflow-y-auto pr-2 space-y-4 -mr-2 scrollbar-thin">
+                  {activeTab === "signup" && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                          Full Athletic Name
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                          <input
+                            type="text"
+                            placeholder="e.g. Clark Kent"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                          <input
+                            type="tel"
+                            placeholder="e.g. +1 (555) 123-4567"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                          Shipping Address (or auto-detect below)
+                        </label>
+                        <div className="relative mb-2">
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                          <input
+                            type="text"
+                            placeholder="e.g. 123 Elite Athlete Way"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                          />
+                        </div>
+                        <AddressPickerMap
+                          currentAddress={address}
+                          onAddressSelect={(newAddr) => setAddress(newAddr)}
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                        <input
-                          type="tel"
-                          placeholder="e.g. +1 (555) 123-4567"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          disabled={isLoading}
-                          className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
-                        />
+                      <div>
+                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                          Country Location
+                        </label>
+                        <div className="relative">
+                          <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                          <select
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-8 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors appearance-none cursor-pointer"
+                          >
+                            <option value="">Select Country</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="Germany">Germany</option>
+                            <option value="France">France</option>
+                            <option value="Japan">Japan</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Switzerland">Switzerland</option>
+                            <option value="Netherlands">Netherlands</option>
+                            <option value="Spain">Spain</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Pakistan">Pakistan</option>
+                            <option value="India">India</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="Saudi Arabia">Saudi Arabia</option>
+                            <option value="United Arab Emirates">United Arab Emirates</option>
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center px-1 text-stone-500">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
 
-                <div>
-                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                    <input
-                      type="email"
-                      placeholder="e.g. athlete@stepx.fit"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-11 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-black cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {activeTab === "signup" && (
                   <div>
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
-                      Confirm Password
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                      <input
+                        type="email"
+                        placeholder="e.g. athlete@stepx.fit"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                      Password
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         disabled={isLoading}
-                        className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                        className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-11 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-black cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  {activeTab === "signup" && (
+                    <div>
+                      <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 mb-1.5">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          disabled={isLoading}
+                          className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-11 pr-4 text-xs font-medium focus:border-black focus:ring-1 focus:ring-black outline-hidden shadow-xs transition-colors"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Simulated Register / Login button */}
                 <button

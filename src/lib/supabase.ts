@@ -28,10 +28,10 @@ const memoizedColumns: Record<string, string[]> = {};
 export async function getAvailableColumns(tableName: string): Promise<string[]> {
   const normTable = tableName.toLowerCase();
   if (normTable === "users") {
-    return ["email", "name", "status", "address", "phone", "country", "created_at"];
+    return ["email", "name", "status", "address", "phone", "country", "created_at", "bank_name", "routing_number", "bank_account"];
   }
   if (normTable === "athletes") {
-    return ["email", "name", "streak_days", "points", "status", "address", "phone", "country", "updated_at"];
+    return ["email", "name", "streak_days", "points", "status", "address", "phone", "country", "updated_at", "bank_name", "routing_number", "bank_account"];
   }
   if (normTable === "orders") {
     return [
@@ -94,6 +94,9 @@ export interface AthleteProfile {
   phone?: string;
   country?: string;
   password?: string;
+  bankName?: string;
+  routingNumber?: string;
+  bankAccount?: string;
 }
 
 export interface UserRecord {
@@ -158,7 +161,10 @@ export async function getAthleteProfile(email: string): Promise<AthleteProfile |
         address: "address" in row ? (row.address || "") : "",
         phone: "phone" in row ? (row.phone || "") : "",
         country: "country" in row ? (row.country || "") : "",
-        password: "password" in row ? (row.password || "") : ""
+        password: "password" in row ? (row.password || "") : "",
+        bankName: "bank_name" in row ? (row.bank_name || "") : "",
+        routingNumber: "routing_number" in row ? (row.routing_number || "") : "",
+        bankAccount: "bank_account" in row ? (row.bank_account || "") : ""
       };
     }
   } catch (err: any) {
@@ -182,7 +188,10 @@ export async function syncAthleteProfile(profile: AthleteProfile): Promise<boole
       address: profile.address || "Not Provided",
       phone: profile.phone || "Not Provided",
       country: profile.country || "Not Provided",
-      password: profile.password
+      password: profile.password,
+      bank_name: profile.bankName || "",
+      routing_number: profile.routingNumber || "",
+      bank_account: profile.bankAccount || ""
     };
 
     const cleaned = await filterPayload(tableName, rawPayload);
@@ -210,7 +219,10 @@ export async function syncUserRecord(
   address?: string,
   phone?: string,
   country?: string,
-  password?: string
+  password?: string,
+  bankName?: string,
+  routingNumber?: string,
+  bankAccount?: string
 ): Promise<boolean> {
   try {
     const rawPayload = {
@@ -221,6 +233,9 @@ export async function syncUserRecord(
       phone: phone || "Not Provided",
       country: country || "Not Provided",
       password: password,
+      bank_name: bankName || "",
+      routing_number: routingNumber || "",
+      bank_account: bankAccount || "",
       created_at: new Date().toISOString()
     };
 
@@ -251,6 +266,9 @@ export async function updateFullProfile(
     address?: string;
     phone?: string;
     country?: string;
+    bankName?: string;
+    routingNumber?: string;
+    bankAccount?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -289,6 +307,9 @@ export async function updateFullProfile(
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
           country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || "",
           status: "active",
           created_at: new Date().toISOString()
         };
@@ -308,6 +329,9 @@ export async function updateFullProfile(
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
           country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || "",
           status: "active",
           created_at: new Date().toISOString()
         };
@@ -326,6 +350,9 @@ export async function updateFullProfile(
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
           country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || "",
           status: "active"
         };
         const cleanedAthl = await filterPayload(tableName, rawAthlPayload);
@@ -346,7 +373,10 @@ export async function updateFullProfile(
           name: newProfile.name,
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
-          country: newProfile.country || "Not Provided"
+          country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || ""
         };
         const cleaned = await filterPayload("users", rawPayload);
         const { error: errUser } = await supabase
@@ -360,7 +390,10 @@ export async function updateFullProfile(
           name: newProfile.name,
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
-          country: newProfile.country || "Not Provided"
+          country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || ""
         };
         const cleanedUser = await filterPayload("users", rawUserPayload);
         const { error: errUser } = await supabase
@@ -374,7 +407,10 @@ export async function updateFullProfile(
           name: newProfile.name,
           address: newProfile.address || "Not Provided",
           phone: newProfile.phone || "Not Provided",
-          country: newProfile.country || "Not Provided"
+          country: newProfile.country || "Not Provided",
+          bank_name: newProfile.bankName || "",
+          routing_number: newProfile.routingNumber || "",
+          bank_account: newProfile.bankAccount || ""
         };
         const cleanedAthl = await filterPayload(tableName, rawAthlPayload);
         const { error: errAthl } = await supabase

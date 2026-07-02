@@ -70,16 +70,22 @@ export default function Navbar({
       const cleanSessionAddr = sessionAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
       setEditAddress(cleanSessionAddr);
       
-      const legacyVal = sessionBankMatch ? sessionBankMatch[1] : (localStorage.getItem(`stepx_bank_${userSession.email}`) || "");
-      if (legacyVal.includes("|")) {
-        const parts = legacyVal.split("|");
-        setEditBankName(parts[0] || "");
-        setEditBankAccount(parts[1] || "");
-        setEditBankRouting(parts[2] || "");
+      if (userSession.bankName) {
+        setEditBankName(userSession.bankName);
+        setEditBankAccount(userSession.bankAccount || "");
+        setEditBankRouting(userSession.bankRouting || "");
       } else {
-        setEditBankName(legacyVal);
-        setEditBankAccount("");
-        setEditBankRouting("");
+        const legacyVal = sessionBankMatch ? sessionBankMatch[1] : (localStorage.getItem(`stepx_bank_${userSession.email}`) || "");
+        if (legacyVal.includes("|")) {
+          const parts = legacyVal.split("|");
+          setEditBankName(parts[0] || "");
+          setEditBankAccount(parts[1] || "");
+          setEditBankRouting(parts[2] || "");
+        } else {
+          setEditBankName(legacyVal);
+          setEditBankAccount("");
+          setEditBankRouting("");
+        }
       }
       
       const rawPhone = userSession.phone || "";
@@ -102,16 +108,22 @@ export default function Navbar({
           const cleanDbAddr = dbAddr.replace(/\[Bank:\s*(.*?)\]/, "").trim();
           setEditAddress(cleanDbAddr);
           
-          const legacyDbVal = dbBankMatch ? dbBankMatch[1] : (localStorage.getItem(`stepx_bank_${fresh.email}`) || "");
-          if (legacyDbVal.includes("|")) {
-            const parts = legacyDbVal.split("|");
-            setEditBankName(parts[0] || "");
-            setEditBankAccount(parts[1] || "");
-            setEditBankRouting(parts[2] || "");
+          if (fresh.bankName) {
+            setEditBankName(fresh.bankName);
+            setEditBankAccount(fresh.bankAccount || "");
+            setEditBankRouting(fresh.routingNumber || "");
           } else {
-            setEditBankName(legacyDbVal);
-            setEditBankAccount("");
-            setEditBankRouting("");
+            const legacyDbVal = dbBankMatch ? dbBankMatch[1] : (localStorage.getItem(`stepx_bank_${fresh.email}`) || "");
+            if (legacyDbVal.includes("|")) {
+              const parts = legacyDbVal.split("|");
+              setEditBankName(parts[0] || "");
+              setEditBankAccount(parts[1] || "");
+              setEditBankRouting(parts[2] || "");
+            } else {
+              setEditBankName(legacyDbVal);
+              setEditBankAccount("");
+              setEditBankRouting("");
+            }
           }
           
           const rawDbPhone = fresh.phone || "";
@@ -129,7 +141,10 @@ export default function Navbar({
               email: fresh.email,
               address: cleanDbAddr === "" ? "Not Provided" : cleanDbAddr,
               phone: cleanPhone === "" ? "Not Provided" : cleanPhone,
-              country: cleanCountry === "" ? "Not Provided" : cleanCountry
+              country: cleanCountry === "" ? "Not Provided" : cleanCountry,
+              bankName: fresh.bankName || "",
+              bankAccount: fresh.bankAccount || "",
+              bankRouting: fresh.routingNumber || ""
             });
           }
         }
@@ -164,7 +179,10 @@ export default function Navbar({
       email: editEmail,
       address: combinedAddress,
       phone: editPhone,
-      country: editCountry
+      country: editCountry,
+      bankName: editBankName.trim(),
+      bankAccount: editBankAccount.trim(),
+      routingNumber: editBankRouting.trim()
     });
 
     if (result.success) {
@@ -189,7 +207,10 @@ export default function Navbar({
           email: editEmail,
           address: editAddress,
           phone: editPhone,
-          country: editCountry
+          country: editCountry,
+          bankName: editBankName.trim(),
+          bankAccount: editBankAccount.trim(),
+          bankRouting: editBankRouting.trim()
         });
       }
       setTimeout(() => {

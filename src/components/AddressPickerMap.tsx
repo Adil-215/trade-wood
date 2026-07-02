@@ -84,8 +84,8 @@ export default function AddressPickerMap({ currentAddress, onAddressSelect }: Ad
       },
       {
         enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 0,
+        timeout: 30000,
+        maximumAge: 30000,
       }
     );
   };
