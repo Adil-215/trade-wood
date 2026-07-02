@@ -189,11 +189,11 @@ export default function AccessoriesSection({
                     <div className="flex flex-col items-start leading-tight">
                       {acc.originalPrice && (
                         <span className="font-mono text-stone-400 text-[10px] line-through font-extrabold">
-                          ${acc.originalPrice}
+                          PKR {acc.originalPrice}
                         </span>
                       )}
                       <span className="font-mono text-base font-black text-neutral-900">
-                        ${acc.price}
+                        PKR {acc.price}
                       </span>
                     </div>
 

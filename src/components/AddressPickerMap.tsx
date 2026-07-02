@@ -20,8 +20,6 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral>({ lat: 37.7749, lng: -122.4194 }); // default: SF
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchFeedback, setSearchFeedback] = useState<string | null>(null);
   const [isSelectedFeedback, setIsSelectedFeedback] = useState(false);
   const lastGeocodedAddressRef = useRef<string>("");
 
@@ -48,39 +46,6 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
 
     return () => clearTimeout(timer);
   }, [geocoder, currentAddress, map]);
-
-  // Handle Map Search
-  const handleMapSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!geocoder || !searchQuery.trim()) return;
-
-    setIsGeocoding(true);
-    setSearchFeedback(null);
-    geocoder.geocode({ address: searchQuery }, (results, status) => {
-      setIsGeocoding(false);
-      if (status === "OK" && results?.[0]) {
-        const loc = results[0].geometry.location;
-        const latLng = { lat: loc.lat(), lng: loc.lng() };
-        setMarkerPos(latLng);
-        map?.panTo(latLng);
-        map?.setZoom(15);
-        
-        const formatted = results[0].formatted_address;
-        lastGeocodedAddressRef.current = formatted;
-        onAddressSelect(formatted);
-        
-        setSearchFeedback("Found!");
-        setIsSelectedFeedback(true);
-        setTimeout(() => {
-          setSearchFeedback(null);
-          setIsSelectedFeedback(false);
-        }, 2000);
-      } else {
-        setSearchFeedback("Retry");
-        setTimeout(() => setSearchFeedback(null), 2000);
-      }
-    });
-  };
 
   // Handle map clicks
   const handleMapClick = (e: any) => {
@@ -159,26 +124,6 @@ function InnerMap({ currentAddress, onAddressSelect }: AddressPickerMapProps) {
           onDragEnd={handleMarkerDragEnd}
         />
       </Map>
-
-      {/* Floating Geosearch Bar */}
-      <form
-        onSubmit={handleMapSearch}
-        className="absolute top-2 left-2 right-2 max-w-[240px] flex items-center gap-1 bg-white/95 backdrop-blur-xs p-1 rounded-lg shadow-md border border-stone-200/80 z-10"
-      >
-        <input
-          type="text"
-          placeholder="Search location map..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 bg-transparent px-2 py-0.5 text-[9px] font-sans font-medium text-neutral-900 focus:outline-hidden border-none focus:ring-0 w-full"
-        />
-        <button
-          type="submit"
-          className="bg-black hover:bg-neutral-800 text-[#C8E600] rounded-md px-2 py-1 text-[8px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0"
-        >
-          {searchFeedback || "Search"}
-        </button>
-      </form>
 
       {/* Locate Me Button Overlay */}
       <button

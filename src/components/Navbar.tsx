@@ -470,7 +470,7 @@ export default function Navbar({
                             {shoe.name}
                           </h4>
                           <p className="font-mono text-[10px] text-[#718200] font-semibold mt-0.5">
-                            {shoe.category} • ${shoe.price}
+                            {shoe.category} • PKR {shoe.price}
                           </p>
                         </div>
                       </button>

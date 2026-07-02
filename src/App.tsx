@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
 import TechSpecsSection from "./components/TechSpecsSection";
@@ -22,7 +22,7 @@ import SignInModal from "./components/SignInModal";
 
 import { CartItem, ColorOption, Shoe, UserSession } from "./types";
 import { catalogList } from "./data";
-import { updateUserStatus } from "./lib/supabase";
+import { updateUserStatus, getProducts } from "./lib/supabase";
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -30,6 +30,17 @@ export default function App() {
   const [activeQuickViewShoe, setActiveQuickViewShoe] = useState<Shoe | null>(null);
   const [activePage, setActivePage] = useState<"home" | "about" | "faq" | "new-arrivals">("home");
   const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const [products, setProducts] = useState<Shoe[]>(catalogList);
+
+  useEffect(() => {
+    async function loadProducts() {
+      const dbProducts = await getProducts();
+      if (dbProducts && dbProducts.length > 0) {
+        setProducts(dbProducts);
+      }
+    }
+    loadProducts();
+  }, []);
 
   // User Profile Session Persistence
   const [userSession, setUserSession] = useState<UserSession | null>(() => {
@@ -137,7 +148,7 @@ export default function App() {
       <Navbar
         cartItems={cart}
         onOpenCart={() => setIsCartOpen(true)}
-        catalogItems={catalogList}
+        catalogItems={products}
         onScrollToSection={handleScrollToSection}
         onSelectShoeProduct={(shoe) => setActiveQuickViewShoe(shoe)}
         activePage={activePage}
@@ -198,6 +209,7 @@ export default function App() {
 
             {/* Premium Highlights Showcase & Live Telemetry Panel */}
             <ShowcaseSection
+              products={products}
               onAddToCart={handleAddToCart}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickView={(shoe) => setActiveQuickViewShoe(shoe)}
@@ -208,6 +220,7 @@ export default function App() {
 
             {/* Grid Catalog Series ( browse and filtering ) */}
             <ProductCatalog
+              products={products}
               onAddToCart={handleAddToCart}
               onOpenCart={() => setIsCartOpen(true)}
               onQuickView={(shoe) => setActiveQuickViewShoe(shoe)}

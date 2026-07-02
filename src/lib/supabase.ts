@@ -4,6 +4,11 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { Shoe } from "../types";
+import tradewoodShoeHero from "../assets/images/tradewood_shoe_hero_1780681267999.png";
+import carbonBlackSneaker from "../assets/images/carbon_black_sneaker_1780681346294.png";
+import neonOrangeSneaker from "../assets/images/neon_orange_sneaker_1780681366059.png";
+import airluxeWhiteSneaker from "../assets/images/airluxe_white_1780768734752.png";
 
 // Safe fallback credentials from the user's input
 const rawUrl = import.meta.env.VITE_SUPABASE_URL || "https://ollcpzalkykbdfeaujjx.supabase.co";
@@ -493,4 +498,72 @@ export async function createOrderLog(order: OrderInput): Promise<boolean> {
     console.error("Failed to submit order log details:", err.message);
     return false;
   }
+}
+
+/**
+ * Fetch dynamic products from Supabase products table
+ */
+export async function getProducts(): Promise<Shoe[]> {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.warn("Supabase products fetch error, using local fallback:", error.message);
+      return [];
+    }
+
+    if (data && data.length > 0) {
+      return data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        tagline: item.tagline || "Performance Footwear",
+        price: Number(item.price),
+        originalPrice: item.originalPrice || (item.original_price ? Number(item.original_price) : undefined),
+        image: resolveImage(item.id, item.image),
+        description: item.description || "",
+        colors: item.id === "tw-dynafit-volt" ? [
+          { name: "Classic Brown", hex: "#78350f", bgClass: "bg-amber-800" }
+        ] : (Array.isArray(item.colors) && item.colors.length > 0 ? [item.colors[0]] : []),
+        sizes: Array.isArray(item.sizes) ? item.sizes.map(Number) : [8, 9, 10, 11],
+        rating: item.rating ? Number(item.rating) : 4.8,
+        reviewsCount: item.reviews_count || item.reviewsCount || 100,
+        category: item.category || "Street Performance",
+        isNew: item.is_new !== undefined ? item.is_new : item.isNew,
+        specs: Array.isArray(item.specs) ? item.specs : []
+      }));
+    }
+  } catch (err: any) {
+    console.error("Failed to fetch products from Supabase:", err.message);
+  }
+  return [];
+}
+
+function resolveImage(id: string, dbImage: string): string {
+  const normalizedId = (id || "").toLowerCase().trim();
+  const normalizedImg = (dbImage || "").toLowerCase().trim();
+
+  if (normalizedId === "tw-airluxe-platinum" || normalizedImg.includes("airluxe") || normalizedImg.includes("platinum")) {
+    return airluxeWhiteSneaker;
+  }
+  if (
+    normalizedId === "tw-dynafit-volt" || 
+    normalizedImg.includes("dynafit") || 
+    normalizedImg.includes("volt") || 
+    normalizedImg.includes("hero") ||
+    normalizedImg.includes("1606107557195-0e29a4b5b4aa") ||
+    normalizedImg.includes("1460353581641-37baddab0fa2") ||
+    normalizedImg.includes("1608667508764-33cf0726b13a")
+  ) {
+    return tradewoodShoeHero;
+  }
+  if (normalizedId === "tw-carbon-black" || normalizedImg.includes("carbon") || normalizedImg.includes("stealth")) {
+    return carbonBlackSneaker;
+  }
+  if (normalizedId === "tw-neon-orange" || normalizedImg.includes("neon") || normalizedImg.includes("orange") || normalizedImg.includes("kinetic")) {
+    return neonOrangeSneaker;
+  }
+  return dbImage || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop";
 }

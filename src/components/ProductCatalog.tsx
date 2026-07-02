@@ -3,19 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Star, Eye, ShoppingCart, SlidersHorizontal, CheckSquare, Sparkles } from "lucide-react";
 import { ColorOption, Shoe } from "../types";
 import { catalogList } from "../data";
 
 interface ProductCatalogProps {
+  products?: Shoe[];
   onAddToCart: (shoe: Shoe, color: ColorOption, size: number) => void;
   onOpenCart: () => void;
   onQuickView: (shoe: Shoe) => void;
 }
 
 export default function ProductCatalog({
+  products,
   onAddToCart,
   onOpenCart,
   onQuickView
@@ -23,24 +25,41 @@ export default function ProductCatalog({
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
+  const listToUse = products && products.length > 0 ? products : catalogList;
+
   // Maintain separate local size/color choices for each card key to make card interaction unique!
   const [cardConfig, setCardConfig] = useState<Record<string, { size: number; color: ColorOption }>>(() => {
-    // Seed default selection details
     const defaults: Record<string, { size: number; color: ColorOption }> = {};
-    catalogList.forEach((shoe) => {
+    listToUse.forEach((shoe) => {
       defaults[shoe.id] = {
-        size: shoe.sizes[Math.floor(shoe.sizes.length / 2)],
-        color: shoe.colors[0]
+        size: shoe.sizes[Math.floor(shoe.sizes.length / 2)] || 9,
+        color: shoe.colors[0] || { name: "Default", hex: "#000", bgClass: "bg-black" }
       };
     });
     return defaults;
   });
 
+  // Sync cardConfig when products are dynamically loaded
+  useEffect(() => {
+    setCardConfig((prev) => {
+      const updated = { ...prev };
+      listToUse.forEach((shoe) => {
+        if (!updated[shoe.id]) {
+          updated[shoe.id] = {
+            size: shoe.sizes[Math.floor(shoe.sizes.length / 2)] || 9,
+            color: shoe.colors[0] || { name: "Default", hex: "#000", bgClass: "bg-black" }
+          };
+        }
+      });
+      return updated;
+    });
+  }, [products]);
+
   const categories = ["All", "Athletic Running", "Street Performance", "Lifestyle Fashion"];
 
   const filteredShoes = selectedCategory === "All"
-    ? catalogList
-    : catalogList.filter((shoe) => shoe.category === selectedCategory);
+    ? listToUse
+    : listToUse.filter((shoe) => shoe.category === selectedCategory);
 
   const handleUpdateCardColor = (shoeId: string, color: ColorOption) => {
     setCardConfig((prev) => ({
@@ -157,8 +176,10 @@ export default function ProductCatalog({
                     className="w-full h-full object-cover transition-all duration-500 scale-95 group-hover:scale-105 drop-shadow-md rounded-3xl"
                     style={{
                       filter: `hue-rotate(${
-                        currentConfig.color.name === "Neon Orange" || currentConfig.color.name === "Kinetic Orange" ? "120deg" :
-                        currentConfig.color.name === "Obsidian Black" ? "210deg" :
+                        currentConfig.color.name === "Volt Blue" ? "200deg" :
+                        currentConfig.color.name === "Deep Maroon" ? "340deg" :
+                        currentConfig.color.name === "Neon Orange" ? "120deg" :
+                        currentConfig.color.name === "Obsidian Black" || currentConfig.color.name === "Forest Green" ? "210deg" :
                         currentConfig.color.name === "Pure White" || currentConfig.color.name === "Stealth Platinum" ? "290deg" : "0deg"
                       })`
                     }}
@@ -184,11 +205,11 @@ export default function ProductCatalog({
                     </h3>
                     <div className="flex flex-col items-end">
                       <span className="font-mono text-base font-black text-[#718200]">
-                        ${shoe.price}
+                        PKR {shoe.price}
                       </span>
                       {shoe.originalPrice && (
                         <span className="font-mono text-[11px] text-zinc-400 line-through">
-                          ${shoe.originalPrice}
+                          PKR {shoe.originalPrice}
                         </span>
                       )}
                     </div>
@@ -201,26 +222,28 @@ export default function ProductCatalog({
                 {/* Symmetrical Inline configurators inside card */}
                 <div className="mt-5 pt-4.5 border-t border-stone-200/80 space-y-3.5">
                   {/* Color choose layout */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest">
-                      CHOOSE TECH COLWAY
-                    </span>
-                    <div className="flex gap-1.5">
-                      {shoe.colors.map((color) => (
-                        <button
-                          key={color.name}
-                          id={`card-color-${shoe.id}-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          onClick={() => handleUpdateCardColor(shoe.id, color)}
-                          className={`h-4.5 w-4.5 rounded-full ${color.bgClass} border cursor-pointer ${
-                            currentConfig.color.name === color.name
-                              ? "ring-2 ring-black ring-offset-1 scale-110"
-                              : "border-neutral-300 opacity-80 hover:opacity-100"
-                          } transition-all`}
-                          title={color.name}
-                        />
-                      ))}
+                  {shoe.colors.length > 1 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest">
+                        CHOOSE TECH COLWAY
+                      </span>
+                      <div className="flex gap-1.5">
+                        {shoe.colors.map((color) => (
+                          <button
+                            key={color.name}
+                            id={`card-color-${shoe.id}-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            onClick={() => handleUpdateCardColor(shoe.id, color)}
+                            className={`h-4.5 w-4.5 rounded-full ${color.bgClass} border cursor-pointer ${
+                              currentConfig.color.name === color.name
+                                ? "ring-2 ring-black ring-offset-1 scale-110"
+                                : "border-neutral-300 opacity-80 hover:opacity-100"
+                            } transition-all`}
+                            title={color.name}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Size choose layout */}
                   <div className="flex items-center justify-between">

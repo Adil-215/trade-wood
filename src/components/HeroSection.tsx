@@ -59,26 +59,28 @@ export default function HeroSection({ onAddToCart, onOpenCart }: HeroSectionProp
 
           {/* Color & Size Customizer (adds high interactivity to hero section) */}
           <div id="hero-customizer" className="bg-white/50 backdrop-blur-md rounded-2xl p-5 border border-stone-200 max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono font-bold tracking-wider text-stone-500 uppercase">
-                Colorway: <span className="text-stone-900 font-bold">{selectedColor.name}</span>
-              </span>
-              <div className="flex gap-2">
-                {flagshipShoe.colors.map((color) => (
-                  <button
-                    key={color.name}
-                    id={`hero-color-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
-                    onClick={() => setSelectedColor(color)}
-                    className={`h-5 w-5 rounded-full ${color.bgClass} border cursor-pointer ${
-                      selectedColor.name === color.name
-                        ? "ring-2 ring-black ring-offset-2 scale-110"
-                        : "border-neutral-300 opacity-80 hover:opacity-100"
-                    } transition-all`}
-                    title={color.name}
-                  />
-                ))}
+            {flagshipShoe.colors.length > 1 && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold tracking-wider text-stone-500 uppercase">
+                  Colorway: <span className="text-stone-900 font-bold">{selectedColor.name}</span>
+                </span>
+                <div className="flex gap-2">
+                  {flagshipShoe.colors.map((color) => (
+                    <button
+                      key={color.name}
+                      id={`hero-color-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      onClick={() => setSelectedColor(color)}
+                      className={`h-5 w-5 rounded-full ${color.bgClass} border cursor-pointer ${
+                        selectedColor.name === color.name
+                          ? "ring-2 ring-black ring-offset-2 scale-110"
+                          : "border-neutral-300 opacity-80 hover:opacity-100"
+                      } transition-all`}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex items-center justify-between border-t border-stone-100 pt-3">
               <span className="text-xs font-mono font-bold tracking-wider text-stone-500 uppercase">
@@ -183,12 +185,15 @@ export default function HeroSection({ onAddToCart, onOpenCart }: HeroSectionProp
               <img
                 src={flagshipShoe.image}
                 alt={flagshipShoe.name}
-                className="w-[90%] sm:w-[94%] h-auto object-contain transition-transform duration-500 scale-100 hover:scale-[1.04] drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)] bg-transparent mix-blend-multiply rounded-[2rem] md:rounded-[2.5rem]"
+                className="w-[90%] sm:w-[94%] max-h-[220px] sm:max-h-[280px] lg:max-h-[340px] w-auto h-auto object-contain transition-transform duration-500 drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)] bg-transparent mix-blend-multiply rounded-[2rem] md:rounded-[2.5rem]"
                 style={{
                   backgroundColor: "transparent",
+                  transform: isHovered ? "scaleX(-1.04) scaleY(1.04)" : "scaleX(-1)",
                   filter: `hue-rotate(${
+                    selectedColor.name === "Volt Blue" ? "200deg" :
+                    selectedColor.name === "Deep Maroon" ? "340deg" :
                     selectedColor.name === "Neon Orange" ? "120deg" :
-                    selectedColor.name === "Obsidian Black" ? "210deg" :
+                    selectedColor.name === "Obsidian Black" || selectedColor.name === "Forest Green" ? "210deg" :
                     selectedColor.name === "Pure White" ? "290deg" : "0deg"
                   })`
                 }}

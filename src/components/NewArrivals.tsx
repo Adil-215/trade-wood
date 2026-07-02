@@ -190,11 +190,11 @@ export default function NewArrivals({ onAddToCart, onOpenCart, onBackToHome }: N
               {/* Pricing Blocks */}
               <div className="flex items-baseline gap-3 pt-2">
                 <span className="font-display text-4xl font-extrabold text-neutral-900">
-                  ${airluxeShoe.price}
+                  PKR {airluxeShoe.price}
                 </span>
                 {airluxeShoe.originalPrice && (
                   <span className="font-display text-lg text-neutral-400 line-through">
-                    ${airluxeShoe.originalPrice}
+                    PKR {airluxeShoe.originalPrice}
                   </span>
                 )}
                 <span className="ml-1 text-[10px] font-mono text-[#718200] bg-[#EDF5D8] px-2 py-0.5 rounded uppercase font-bold">
@@ -206,29 +206,31 @@ export default function NewArrivals({ onAddToCart, onOpenCart, onBackToHome }: N
             <hr className="border-stone-100" />
 
             {/* Customizer Option 1: Design Color Overlay */}
-            <div className="space-y-3">
-              <label className="block text-xs font-mono font-bold text-neutral-600 uppercase tracking-wider">
-                Select Edition Overlay: <span className="text-black font-extrabold">{selectedColor.name}</span>
-              </label>
-              <div className="flex items-center gap-2.5">
-                {airluxeShoe.colors.map((color) => {
-                  const isSelected = selectedColor.name === color.name;
-                  return (
-                    <button
-                      key={color.name}
-                      onClick={() => setSelectedColor(color)}
-                      className={`h-9 w-9 rounded-full relative cursor-pointer border flex items-center justify-center ${
-                        isSelected ? "border-black scale-108 ring-2 ring-stone-100" : "border-stone-200"
-                      }`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                    >
-                      {isSelected && <Check className="h-4 w-4 text-neutral-800 mix-blend-difference" />}
-                    </button>
-                  );
-                })}
+            {airluxeShoe.colors.length > 1 && (
+              <div className="space-y-3">
+                <label className="block text-xs font-mono font-bold text-neutral-600 uppercase tracking-wider">
+                  Select Edition Overlay: <span className="text-black font-extrabold">{selectedColor.name}</span>
+                </label>
+                <div className="flex items-center gap-2.5">
+                  {airluxeShoe.colors.map((color) => {
+                    const isSelected = selectedColor.name === color.name;
+                    return (
+                      <button
+                        key={color.name}
+                        onClick={() => setSelectedColor(color)}
+                        className={`h-9 w-9 rounded-full relative cursor-pointer border flex items-center justify-center ${
+                          isSelected ? "border-black scale-108 ring-2 ring-stone-100" : "border-stone-200"
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                        title={color.name}
+                      >
+                        {isSelected && <Check className="h-4 w-4 text-neutral-800 mix-blend-difference" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Sizing Section with Smart Advisor */}
             <div className="space-y-4">
@@ -330,7 +332,7 @@ export default function NewArrivals({ onAddToCart, onOpenCart, onBackToHome }: N
                 ) : (
                   <>
                     <ShoppingBag className="h-4.5 w-4.5" />
-                    SECURE EXCLUSIVE RELEASE DRIP • ${airluxeShoe.price}
+                    SECURE EXCLUSIVE RELEASE DRIP • PKR {airluxeShoe.price}
                   </>
                 )}
               </button>

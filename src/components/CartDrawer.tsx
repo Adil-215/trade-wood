@@ -237,7 +237,7 @@ export default function CartDrawer({
                                   {item.shoe.name}
                                 </h4>
                                 <span className="font-mono text-sm font-extrabold text-[#718200]">
-                                  ${item.shoe.price * item.quantity}
+                                  PKR {item.shoe.price * item.quantity}
                                 </span>
                               </div>
                               <p className="text-[11px] text-neutral-500 font-mono mt-1">
@@ -463,11 +463,11 @@ export default function CartDrawer({
                   <div className="space-y-1.5 text-xs font-mono font-semibold text-stone-600 mb-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span className="text-neutral-900">${subtotal.toFixed(2)}</span>
+                      <span className="text-neutral-900">PKR {subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Vat / Local Sales Tax (8%)</span>
-                      <span className="text-neutral-900">${tax.toFixed(2)}</span>
+                      <span className="text-neutral-900">PKR {tax.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Secure Dispatch Speed Shipping</span>
@@ -475,14 +475,14 @@ export default function CartDrawer({
                         {shipping === 0 ? (
                           <span className="text-[#718200] font-bold">FREE</span>
                         ) : (
-                          `$${shipping.toFixed(2)}`
+                          `PKR ${shipping.toFixed(2)}`
                         )}
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-stone-100 pt-2 text-sm font-bold text-neutral-900 font-display">
                       <span>ESTIMATED TOTAL DUE</span>
                       <span className="font-mono text-base font-extrabold text-[#718200]">
-                        ${total.toFixed(2)}
+                        PKR {total.toFixed(2)}
                       </span>
                     </div>
                   </div>

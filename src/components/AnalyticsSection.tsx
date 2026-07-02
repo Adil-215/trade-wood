@@ -246,7 +246,7 @@ export default function AnalyticsSection() {
               <div className="text-4xl sm:text-5xl lg:text-6xl font-black text-white font-display uppercase tracking-tight flex items-baseline gap-1.5">
                 <ScrollAnimatedNumber
                   value={activeStats.sales[timeframe]}
-                  prefix="$"
+                  prefix="PKR "
                   duration={1.2}
                 />
               </div>

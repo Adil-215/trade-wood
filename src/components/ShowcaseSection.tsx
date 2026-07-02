@@ -3,19 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, ArrowRight, Zap, Target, Flame, ChevronRight, ShoppingBag, Eye } from "lucide-react";
 import { Shoe, ColorOption } from "../types";
 import { flagshipShoe, catalogList } from "../data";
 
 interface ShowcaseSectionProps {
+  products?: Shoe[];
   onAddToCart: (shoe: Shoe, color: ColorOption, size: number) => void;
   onOpenCart: () => void;
   onQuickView: (shoe: Shoe) => void;
 }
 
 export default function ShowcaseSection({
+  products,
   onAddToCart,
   onOpenCart,
   onQuickView
@@ -23,15 +25,93 @@ export default function ShowcaseSection({
   // Let the user select between flagship items for a premium showpiece gallery
   const [activeShowcaseIdx, setActiveShowcaseIdx] = useState(0);
   const [activeMetricTab, setActiveMetricTab] = useState<"performance" | "biomechanics" | "materials">("performance");
-  const [userSelectedColor, setUserSelectedColor] = useState<ColorOption>(catalogList[0].colors[0]);
 
-  const featuredShoes = catalogList;
-  const currentShoe = featuredShoes[activeShowcaseIdx];
+  const featuredShoes = products && products.length > 0 ? products : catalogList;
+  const currentShoe = featuredShoes[activeShowcaseIdx] || featuredShoes[0] || catalogList[0];
+
+  const [userSelectedColor, setUserSelectedColor] = useState<ColorOption>(() => currentShoe.colors[0] || catalogList[0].colors[0]);
+
+  const getSpotlightStyles = () => {
+    const name = userSelectedColor?.name?.toLowerCase() || "";
+    if (name.includes("maroon")) {
+      return {
+        bg: "bg-rose-50/85",
+        border: "border-rose-200/50",
+        glow: "bg-rose-500/20",
+        badge: "text-rose-700 bg-white/95 border-rose-100",
+        statusBg: "bg-rose-700"
+      };
+    }
+    if (name.includes("green")) {
+      return {
+        bg: "bg-emerald-50/85",
+        border: "border-emerald-200/50",
+        glow: "bg-emerald-500/20",
+        badge: "text-emerald-700 bg-white/95 border-emerald-100",
+        statusBg: "bg-emerald-700"
+      };
+    }
+    if (name.includes("blue")) {
+      return {
+        bg: "bg-blue-50/85",
+        border: "border-blue-200/50",
+        glow: "bg-blue-500/20",
+        badge: "text-blue-700 bg-white/95 border-blue-100",
+        statusBg: "bg-blue-700"
+      };
+    }
+    if (name.includes("orange")) {
+      return {
+        bg: "bg-orange-50/85",
+        border: "border-orange-200/50",
+        glow: "bg-orange-500/20",
+        badge: "text-orange-700 bg-white/95 border-orange-100",
+        statusBg: "bg-orange-700"
+      };
+    }
+    if (name.includes("cyan")) {
+      return {
+        bg: "bg-cyan-50/85",
+        border: "border-cyan-200/50",
+        glow: "bg-cyan-500/20",
+        badge: "text-cyan-700 bg-white/95 border-cyan-100",
+        statusBg: "bg-cyan-700"
+      };
+    }
+    if (name.includes("black")) {
+      return {
+        bg: "bg-zinc-100/90",
+        border: "border-zinc-300/50",
+        glow: "bg-zinc-500/20",
+        badge: "text-zinc-700 bg-white/95 border-zinc-200",
+        statusBg: "bg-zinc-700"
+      };
+    }
+    // Default fallback
+    return {
+      bg: "bg-[#EDF5D8]",
+      border: "border-[#C8E600]/30",
+      glow: "bg-[#C8E600]/30",
+      badge: "text-[#718200] bg-white/95 border-[#C8E600]/30",
+      statusBg: "bg-[#718200]"
+    };
+  };
+
+  const spotlight = getSpotlightStyles();
+
+  // Sync selected color when current shoe changes or on initial loading
+  useEffect(() => {
+    if (currentShoe?.colors?.[0]) {
+      setUserSelectedColor(currentShoe.colors[0]);
+    }
+  }, [currentShoe]);
 
   // We automatically change current shoe color option when showcase changes
   const handleSelectShowcase = (idx: number) => {
     setActiveShowcaseIdx(idx);
-    setUserSelectedColor(featuredShoes[idx].colors[0]);
+    if (featuredShoes[idx]?.colors?.[0]) {
+      setUserSelectedColor(featuredShoes[idx].colors[0]);
+    }
   };
 
   const currentSize = currentShoe.sizes[Math.floor(currentShoe.sizes.length / 2)];
@@ -108,7 +188,7 @@ export default function ShowcaseSection({
                     {shoe.name.replace("StepX ", "")}
                   </h4>
                   <span className="font-mono text-[9px] text-[#718200] font-extrabold">
-                    ${shoe.price} USD
+                    PKR {shoe.price}
                   </span>
                 </div>
               </button>
@@ -160,24 +240,26 @@ export default function ShowcaseSection({
             {/* Config & Buy now actions */}
             <div className="space-y-5 mt-8 pt-6 border-t border-stone-100">
               {/* Colorway simulation */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
-                  Select Design Shade:
-                </span>
-                <div className="flex gap-1.5">
-                  {currentShoe.colors.map((color) => (
-                    <button
-                      key={color.name}
-                      onClick={() => setUserSelectedColor(color)}
-                      className={`h-5 w-5 rounded-full ${color.bgClass} border cursor-pointer ${
-                        userSelectedColor.name === color.name
-                          ? "ring-2 ring-black ring-offset-2 scale-110"
-                          : "border-neutral-200 opacity-80 hover:opacity-100"
-                      } transition-all`}
-                    />
-                  ))}
+              {currentShoe.colors.length > 1 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
+                    Select Design Shade:
+                  </span>
+                  <div className="flex gap-1.5">
+                    {currentShoe.colors.map((color) => (
+                      <button
+                        key={color.name}
+                        onClick={() => setUserSelectedColor(color)}
+                        className={`h-5 w-5 rounded-full ${color.bgClass} border cursor-pointer ${
+                          userSelectedColor.name === color.name
+                            ? "ring-2 ring-black ring-offset-2 scale-110"
+                            : "border-neutral-200 opacity-80 hover:opacity-100"
+                        } transition-all`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Primary active button triggers */}
               <div className="flex flex-col sm:flex-row gap-3">
@@ -204,12 +286,12 @@ export default function ShowcaseSection({
           </div>
 
           {/* Center Block (col-span-4): Dynamic Immersive Spotlight Display */}
-          <div className="lg:col-span-4 relative flex flex-col justify-center items-center bg-[#EDF5D8] rounded-3xl overflow-hidden border border-[#C8E600]/30 p-8 text-center min-h-[400px] group/showcase-card">
+          <div className={`lg:col-span-4 relative flex flex-col justify-center items-center ${spotlight.bg} rounded-3xl overflow-hidden border ${spotlight.border} p-8 text-center min-h-[400px] group/showcase-card transition-all duration-500`}>
             {/* Ambient decorative grid behind shoe */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `radial-gradient(#111827 1px, transparent 1px)`, backgroundSize: "16px 16px" }} />
             
             {/* Visual spotlight backdrop glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-56 w-56 rounded-full bg-[#C8E600]/30 blur-3xl" />
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-56 w-56 rounded-full ${spotlight.glow} blur-3xl transition-all duration-500`} />
 
             {/* Floating spotlight showcase item */}
             <AnimatePresence mode="wait">
@@ -227,8 +309,10 @@ export default function ShowcaseSection({
                   className="w-9/12 sm:w-11/12 max-h-56 sm:max-h-none h-auto object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.18)] rounded-3xl mix-blend-multiply transition-transform duration-500 group-hover/showcase-card:scale-110"
                   style={{
                     filter: `hue-rotate(${
-                      userSelectedColor.name === "Neon Orange" || userSelectedColor.name === "Kinetic Orange" ? "120deg" :
-                      userSelectedColor.name === "Obsidian Black" ? "210deg" :
+                      userSelectedColor.name === "Volt Blue" ? "200deg" :
+                      userSelectedColor.name === "Deep Maroon" ? "340deg" :
+                      userSelectedColor.name === "Neon Orange" ? "120deg" :
+                      userSelectedColor.name === "Obsidian Black" || userSelectedColor.name === "Forest Green" ? "210deg" :
                       userSelectedColor.name === "Pure White" || userSelectedColor.name === "Stealth Platinum" ? "290deg" : "0deg"
                     })`
                   }}
@@ -238,12 +322,12 @@ export default function ShowcaseSection({
             </AnimatePresence>
 
             {/* Decorative lab coordinate badges */}
-            <div className="absolute top-4 left-4 z-20 font-mono text-[9px] font-bold text-[#718200] tracking-wider uppercase bg-white/95 backdrop-blur-md py-1 px-2.5 rounded-lg border border-[#C8E600]/30 shadow-md">
+            <div className={`absolute top-4 left-4 z-20 font-mono text-[9px] font-bold ${spotlight.badge} tracking-wider uppercase py-1 px-2.5 rounded-lg shadow-md transition-colors duration-500`}>
               LAB GRID: TW-#{activeShowcaseIdx + 1}
             </div>
 
-            <div className="absolute bottom-4 right-4 z-20 font-mono text-[9px] font-bold text-neutral-800 tracking-wider uppercase bg-white/95 backdrop-blur-md py-1 px-3 rounded-lg border border-[#C8E600]/30 flex items-center gap-1 shadow-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#718200] animate-pulse" />
+            <div className={`absolute bottom-4 right-4 z-20 font-mono text-[9px] font-bold text-neutral-800 tracking-wider uppercase bg-white/95 backdrop-blur-md py-1 px-3 rounded-lg border ${spotlight.border} flex items-center gap-1 shadow-md transition-colors duration-500`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${spotlight.statusBg} animate-pulse`} />
               <span>SPOTLIGHT STATUS: READY</span>
             </div>
           </div>

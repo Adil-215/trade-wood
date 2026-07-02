@@ -85,8 +85,10 @@ export default function ProductQuickViewModal({
                       ? "grayscale(100%) brightness(40%)"
                       : "none")
                     : `hue-rotate(${
-                      selectedColor.name === "Neon Orange" || selectedColor.name === "Kinetic Orange" ? "120deg" :
-                      selectedColor.name === "Obsidian Black" ? "210deg" :
+                      selectedColor.name === "Volt Blue" ? "200deg" :
+                      selectedColor.name === "Deep Maroon" ? "340deg" :
+                      selectedColor.name === "Neon Orange" ? "120deg" :
+                      selectedColor.name === "Obsidian Black" || selectedColor.name === "Forest Green" ? "210deg" :
                       selectedColor.name === "Pure White" || selectedColor.name === "Stealth Platinum" ? "290deg" : "0deg"
                     })`
                 }}
@@ -113,11 +115,11 @@ export default function ProductQuickViewModal({
               
               <div className="flex items-baseline gap-2 mt-3">
                 <span className="font-mono text-xl font-extrabold text-neutral-900">
-                  ${shoe.price}.00
+                  PKR {shoe.price}.00
                 </span>
                 {shoe.originalPrice && (
                   <span className="font-mono text-xs text-stone-400 line-through">
-                    ${shoe.originalPrice}.00
+                    PKR {shoe.originalPrice}.00
                   </span>
                 )}
               </div>
@@ -143,25 +145,27 @@ export default function ProductQuickViewModal({
             {/* Customizer and Submit CTA */}
             <div className="space-y-4 border-t border-stone-200/80 pt-4.5">
               {/* Color selectors */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase">
-                  COLORWAY: <strong className="text-stone-900">{selectedColor.name}</strong>
-                </span>
-                <div className="flex gap-1.5">
-                  {shoe.colors.map((color) => (
-                    <button
-                      key={color.name}
-                      id={`quick-color-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
-                      onClick={() => setSelectedColor(color)}
-                      className={`h-4.5 w-4.5 rounded-full ${color.bgClass} border cursor-pointer ${
-                        selectedColor.name === color.name
-                          ? "ring-2 ring-black ring-offset-1 scale-110"
-                          : "border-neutral-300 opacity-85 hover:opacity-100"
-                      } transition-all`}
-                    />
-                  ))}
+              {shoe.colors.length > 1 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase">
+                    COLORWAY: <strong className="text-stone-900">{selectedColor.name}</strong>
+                  </span>
+                  <div className="flex gap-1.5">
+                    {shoe.colors.map((color) => (
+                      <button
+                        key={color.name}
+                        id={`quick-color-${color.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        onClick={() => setSelectedColor(color)}
+                        className={`h-4.5 w-4.5 rounded-full ${color.bgClass} border cursor-pointer ${
+                          selectedColor.name === color.name
+                            ? "ring-2 ring-black ring-offset-1 scale-110"
+                            : "border-neutral-300 opacity-85 hover:opacity-100"
+                        } transition-all`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Size Selectors grid */}
               <div>

@@ -21,8 +21,7 @@ export const airluxeShoe: Shoe = {
   image: airluxeWhiteSneaker,
   description: "Engineered for elite competitive road racing and premium athlete lifestyle. The StepX AirLuxe combines an ultra-luxuous white full-grain leather and lightweight ballistic mesh upper with a revolutionary multi-chamber pressure-reactive Air bag at the heel. Underneath, a curved multi-layer carbon fiber plate propels your heel-to-toe stride with unparalleled mechanical velocity. Accented by high-gloss liquid hot-chrome silver elements.",
   colors: [
-    { name: "Platinum White/Chrome", hex: "#f5f5f5", bgClass: "bg-radial from-stone-100 to-stone-300" },
-    { name: "Liquid Silver", hex: "#cbd5e1", bgClass: "bg-slate-300" }
+    { name: "Platinum White/Chrome", hex: "#f5f5f5", bgClass: "bg-radial from-stone-100 to-stone-300" }
   ],
   sizes: [8, 8.5, 9, 9.5, 10, 10.5, 11, 12],
   rating: 5.0,
@@ -46,10 +45,7 @@ export const flagshipShoe: Shoe = {
   image: tradewoodShoeHero,
   description: "Crafted with 70 years of progressive engineering, the Dynafit Volt features an ultra-responsive responsive carbon-infused plate paired with signature dual-density knit comfort. Built to conquer dynamic workout loops and intensive athletic sessions alike.",
   colors: [
-    { name: "Volt Blue/Lime", hex: "#0082c8", bgClass: "bg-blue-600" },
-    { name: "Obsidian Black", hex: "#1c1917", bgClass: "bg-stone-900" },
-    { name: "Neon Orange", hex: "#ea580c", bgClass: "bg-orange-600" },
-    { name: "Pure White", hex: "#f5f5f5", bgClass: "bg-stone-100" }
+    { name: "Classic Brown", hex: "#78350f", bgClass: "bg-amber-800" }
   ],
   sizes: [7, 8, 8.5, 9, 9.5, 10, 10.5, 11, 12],
   rating: 4.9,
@@ -75,8 +71,7 @@ export const catalogList: Shoe[] = [
     image: carbonBlackSneaker,
     description: "Designed for night runners and minimalist athletes. The Carbon Stealth uses a triple-black lightweight knit structure coupled with specialized deep shock-absorption units to minimize heel impact.",
     colors: [
-      { name: "Obsidian Black", hex: "#111827", bgClass: "bg-gray-950" },
-      { name: "Royal Cyan", hex: "#06b6d4", bgClass: "bg-cyan-500" }
+      { name: "Obsidian Black", hex: "#111827", bgClass: "bg-gray-950" }
     ],
     sizes: [8, 9, 9.5, 10, 10.5, 11, 12],
     rating: 4.8,
@@ -99,8 +94,7 @@ export const catalogList: Shoe[] = [
     image: neonOrangeSneaker,
     description: "An exceptional blend of high-fashion style and athletic performance. Kinetic Orange leverages a soft step-in feel and visual neon accents that deliver an aesthetic pop for everyday wear.",
     colors: [
-      { name: "Kinetic Orange", hex: "#ff5000", bgClass: "bg-orange-500" },
-      { name: "Stealth Platinum", hex: "#cbd5e1", bgClass: "bg-slate-300" }
+      { name: "Kinetic Orange", hex: "#ff5000", bgClass: "bg-orange-500" }
     ],
     sizes: [7.5, 8, 8.5, 9, 9.5, 11, 11.5],
     rating: 4.7,
@@ -157,8 +151,7 @@ export const accessoriesList: Shoe[] = [
     image: tradewoodLaces,
     description: "Engineered from high-tensile interwoven neon nylon fibres and standard carbon locks to ensure absolute slip-free closure during high-velocity sprint sessions. Custom tailored to perfect length matching our Dynafit line.",
     colors: [
-      { name: "Neon Volt", hex: "#C8E600", bgClass: "bg-[#C8E600]" },
-      { name: "Obsidian Black", hex: "#111827", bgClass: "bg-gray-950" }
+      { name: "Neon Volt", hex: "#C8E600", bgClass: "bg-[#C8E600]" }
     ],
     sizes: [0], // 0 stands for Universal Size, we will handle this in UI!
     rating: 4.8,
