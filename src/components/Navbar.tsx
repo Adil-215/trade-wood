@@ -580,7 +580,7 @@ export default function Navbar({
 
                   <div>
                     <label className="block text-[9px] font-mono font-black text-neutral-400 uppercase tracking-widest mb-1.5">
-                      Shipping Address (or select from map below)
+                      Shipping Address (or auto-detect below)
                     </label>
                     <div className="relative mb-2">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />

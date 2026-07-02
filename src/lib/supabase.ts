@@ -26,48 +26,28 @@ export async function getAthletesTable(): Promise<string> {
 const memoizedColumns: Record<string, string[]> = {};
 
 export async function getAvailableColumns(tableName: string): Promise<string[]> {
-  if (memoizedColumns[tableName]) {
-    return memoizedColumns[tableName];
+  const normTable = tableName.toLowerCase();
+  if (normTable === "users") {
+    return ["email", "name", "status", "address", "phone", "country", "created_at"];
   }
-  try {
-    const testColumns = [
-      "email", "name", "status", "phone", "address", "country", 
-      "streak_days", "points", "created_at", "updated_at",
-      "customer_name", "city", "zip", "bank_name", "routing_number",
-      "bank_account", "is_cod", "subtotal", "total", "quantity", "items", "password"
+  if (normTable === "athletes") {
+    return ["email", "name", "streak_days", "points", "status", "address", "phone", "country", "updated_at"];
+  }
+  if (normTable === "orders") {
+    return [
+      "id", "email", "customer_name", "phone", "address", "city", "zip", 
+      "bank_name", "routing_number", "bank_account", "is_cod", 
+      "subtotal", "total", "quantity", "country", "items", "created_at"
     ];
-    const available: string[] = [];
-
-    // Probe columns by selecting with a limit of 1
-    for (const col of testColumns) {
-      const { error } = await supabase
-        .from(tableName)
-        .select(col)
-        .limit(1);
-      
-      const isMissing = error && (
-        error.code === "42703" || 
-        error.message.toLowerCase().includes("column") || 
-        error.message.toLowerCase().includes("failed to find")
-      );
-
-      if (!isMissing) {
-        available.push(col);
-      }
-    }
-    
-    // Always fallback to standard essential columns if no columns were detected or to prevent empty array
-    if (available.length === 0) {
-      available.push("email", "name", "status", "phone");
-    }
-    
-    memoizedColumns[tableName] = available;
-    console.log(`Auto-detected columns for table '${tableName}':`, available);
-    return available;
-  } catch (err: any) {
-    console.warn(`Exception probing columns for ${tableName}:`, err.message);
-    return ["email", "name", "status", "phone"];
   }
+  if (normTable === "products") {
+    return [
+      "id", "name", "price", "image", "tagline", "category", "colors", 
+      "sizes", "rating", "reviews_count", "is_exclusive", "created_at", 
+      "original_price", "description"
+    ];
+  }
+  return ["email", "name", "status", "phone", "address", "country"];
 }
 
 export async function filterPayload(tableName: string, payload: Record<string, any>): Promise<Record<string, any>> {

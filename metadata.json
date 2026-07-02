@@ -1,6 +1,6 @@
 {
   "name": "StepX",
   "description": "An elite high-performance and lightweight athletic sneaker boutique showcasing next-gen carbon-plate running technology with precise exploded layers, colorways customizers, and an interactive shopping system.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
